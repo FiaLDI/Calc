@@ -4,9 +4,10 @@ import { useState } from "react";
 export const CounterWidget = () => {
   const [targetCalories, setTargetCalories] = useState(2000);
 
-  const currentCalories = 2640;
+  const currentCalories = 1640;
 
-  const caloriesPercent = Math.round((currentCalories / targetCalories) * 100);
+  const caloriesPercent = 
+    Math.round((currentCalories / targetCalories) * 100);
 
   return (
     <div className="max-w-sm rounded-[2rem] bg-white p-6 shadow-xl">
@@ -25,18 +26,13 @@ export const CounterWidget = () => {
             Цель на день
           </label>
 
-          <select
+          <input
+            type="number"
             value={targetCalories}
+            min={1}
             onChange={(e) => setTargetCalories(Number(e.target.value))}
-            className="mt-1 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium outline-none transition focus:border-emerald-400 focus:bg-white"
-            >
-            <option value={1600}>1600 ккал</option>
-            <option value={1800}>1800 ккал</option>
-            <option value={2000}>2000 ккал</option>
-            <option value={2200}>2200 ккал</option>
-            <option value={2500}>2500 ккал</option>
-            <option value={3000}>3000 ккал</option>
-            </select>
+            className="mt-1 w-28 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium outline-none transition focus:border-emerald-400 focus:bg-white"
+          />
         </div>
 
         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-100">
