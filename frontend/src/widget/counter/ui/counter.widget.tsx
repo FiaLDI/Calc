@@ -1,0 +1,69 @@
+"use client";
+import { useState } from "react";
+
+export const CounterWidget = () => {
+  const [targetCalories, setTargetCalories] = useState(2000);
+
+  const currentCalories = 2640;
+
+  const caloriesPercent = Math.round((currentCalories / targetCalories) * 100);
+
+  return (
+    <div className="max-w-sm rounded-[2rem] bg-white p-6 shadow-xl">
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm text-zinc-400">Калории сегодня</p>
+
+          <div className="mt-1 flex items-end gap-2">
+            <h2 className="text-3xl font-bold">{currentCalories}</h2>
+            <span className="pb-1 text-sm text-zinc-400">
+              / {targetCalories} ккал
+            </span>
+          </div>
+
+          <label className="mt-3 block text-xs text-zinc-400">
+            Цель на день
+          </label>
+
+          <select
+            value={targetCalories}
+            onChange={(e) => setTargetCalories(Number(e.target.value))}
+            className="mt-1 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium outline-none transition focus:border-emerald-400 focus:bg-white"
+            >
+            <option value={1600}>1600 ккал</option>
+            <option value={1800}>1800 ккал</option>
+            <option value={2000}>2000 ккал</option>
+            <option value={2200}>2200 ккал</option>
+            <option value={2500}>2500 ккал</option>
+            <option value={3000}>3000 ккал</option>
+            </select>
+        </div>
+
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+          <span className="text-lg font-bold text-emerald-600">
+            {caloriesPercent}%
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {[
+          ["Белки", "120 / 160 г", "w-[75%]", "bg-emerald-500"],
+          ["Углеводы", "210 / 320 г", "w-[65%]", "bg-orange-500"],
+          ["Жиры", "40 / 90 г", "w-[45%]", "bg-rose-500"],
+        ].map(([title, value, width, color]) => (
+          <div key={title}>
+            <div className="mb-1 flex justify-between text-sm">
+              <span className="font-medium">{title}</span>
+              <span className="text-zinc-500">{value}</span>
+            </div>
+
+            <div className="h-2 rounded-full bg-zinc-100">
+              <div className={`h-full rounded-full ${width} ${color}`} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
