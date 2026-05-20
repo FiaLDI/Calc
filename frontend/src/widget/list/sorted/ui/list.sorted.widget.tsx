@@ -40,7 +40,7 @@ export const ProductListWidget = () => {
   );
 
   return (
-    <div className="max-w-sm rounded-[2rem] bg-white p-6 shadow-xl">
+    <div className="max-w-sm rounded-4xl bg-white p-6 shadow-xl">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-sm text-zinc-400">Продукты</p>
@@ -57,17 +57,16 @@ export const ProductListWidget = () => {
         {products.map((product) => (
           <div
             key={product.name}
-            className="rounded-3xl border border-zinc-100 bg-zinc-50 p-4 transition hover:bg-white hover:shadow-md"
+            className="rounded-3xl border border-zinc-100 bg-zinc-50 p-2 transition hover:bg-white hover:shadow-md"
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h3 className="font-semibold">{product.name}</h3>
-                <p className="text-sm text-zinc-400">{product.amount}</p>
+            <div className="mb-1 flex items-start justify-between gap-3">
+              <div className="flex gap-3 justify-center items-center">
+                <h3 className="font-semibold text-zinc-400">{product.name}</h3>
+                <p className="text-[12px] text-zinc-400">{product.amount}</p>
               </div>
 
-              <div className="text-right">
-                <p className="font-bold">{product.calories}</p>
-                <p className="text-xs text-zinc-400">ккал</p>
+              <div className="flex gap-3 text-right *:text-sm">
+                <p className="text-zinc-400">{product.calories} ккал</p>
               </div>
             </div>
 

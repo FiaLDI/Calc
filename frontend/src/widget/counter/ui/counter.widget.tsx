@@ -10,8 +10,8 @@ export const CounterWidget = () => {
     Math.round((currentCalories / targetCalories) * 100);
 
   return (
-    <div className="max-w-sm rounded-[2rem] bg-white p-6 shadow-xl">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="w-full h-h-full rounded-4xl bg-white p-6 shadow-xl">
+      <div className="mb-6 flex items-start justify-between gap-4 relative">
         <div>
           <p className="text-sm text-zinc-400">Калории сегодня</p>
 
@@ -21,22 +21,24 @@ export const CounterWidget = () => {
               / {targetCalories} ккал
             </span>
           </div>
+          <div className="flex gap-3">
+            <label className="mt-3 block text-xs text-zinc-400">
+              Цель на день
+            </label>
 
-          <label className="mt-3 block text-xs text-zinc-400">
-            Цель на день
-          </label>
-
-          <input
-            type="number"
-            value={targetCalories}
-            min={1}
-            onChange={(e) => setTargetCalories(Number(e.target.value))}
-            className="mt-1 w-28 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium outline-none transition focus:border-emerald-400 focus:bg-white"
-          />
+            <input
+              type="number"
+              value={targetCalories}
+              min={1}
+              onChange={(e) => setTargetCalories(Number(e.target.value))}
+              className="mt-1 w-28 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium outline-none transition focus:border-emerald-400 focus:bg-white"
+            />
+          </div>
+          
         </div>
 
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-          <span className="text-lg font-bold text-emerald-600">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 absolute right-0">
+          <span className="text-sm font-bold text-emerald-600">
             {caloriesPercent}%
           </span>
         </div>
