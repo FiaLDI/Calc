@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+
+import { formatDateKey } from "@/entities/nutrition/lib/date";
+
+import { AppProviders } from "./providers";
 import "./globals.css";
 
 const robotoMono = Roboto({
@@ -17,12 +21,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialDateKey = formatDateKey(new Date());
+
   return (
     <html
-      lang="en"
+      lang="ru"
       className={`${robotoMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AppProviders initialDateKey={initialDateKey}>{children}</AppProviders>
+      </body>
     </html>
   );
 }
