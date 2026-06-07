@@ -1,0 +1,46 @@
+import recipeProducts from "../data/sources/recipe-products.json" with { type: "json" };
+import type { ProductDto, ProductSourceMeta, ProductUnit } from "../model/types.js";
+import type { ProductSourceRepository } from "./product-source.repository.js";
+
+type RecipeProductRecord = {
+  code: string;
+  created: string;
+  macrosPerPortion: {
+    calories: number;
+    carbs: number;
+    fat: number;
+    protein: number;
+    servingAmount: number;
+    servingUnit: ProductUnit;
+  };
+  name: string;
+};
+
+const META: ProductSourceMeta = {
+  description: "Prepared meal base with full ready-to-eat dishes.",
+  key: "recipes",
+  label: "Recipe DB",
+};
+
+export class RecipeProductsRepository implements ProductSourceRepository {
+  getMeta() {
+    return META;
+  }
+
+  async listProducts(): Promise<ProductDto[]> {
+    return (recipeProducts as RecipeProductRecord[]).map((product) => ({
+      amountUnit: product.macrosPerPortion.servingUnit,
+      amountValue: product.macrosPerPortion.servingAmount,
+      calories: product.macrosPerPortion.calories,
+      carbs: product.macrosPerPortion.carbs,
+      createdAt: product.created,
+      fat: product.macrosPerPortion.fat,
+      id: `${META.key}:${product.code}`,
+      isReadonly: true as const,
+      name: product.name,
+      protein: product.macrosPerPortion.protein,
+      sourceKey: META.key,
+      sourceLabel: META.label,
+    }));
+  }
+}

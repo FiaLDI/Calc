@@ -1,0 +1,41 @@
+[
+  {
+    "code": "recipe-chicken-rice-bowl",
+    "name": "Chicken Rice Bowl",
+    "macrosPerPortion": {
+      "servingAmount": 1,
+      "servingUnit": "порция",
+      "calories": 510,
+      "protein": 39,
+      "carbs": 46,
+      "fat": 18
+    },
+    "created": "2026-05-12T10:00:00.000Z"
+  },
+  {
+    "code": "recipe-salmon-avocado-toast",
+    "name": "Salmon Avocado Toast",
+    "macrosPerPortion": {
+      "servingAmount": 1,
+      "servingUnit": "порция",
+      "calories": 420,
+      "protein": 24,
+      "carbs": 25,
+      "fat": 24
+    },
+    "created": "2026-05-12T10:15:00.000Z"
+  },
+  {
+    "code": "recipe-protein-pancakes",
+    "name": "Protein Pancakes",
+    "macrosPerPortion": {
+      "servingAmount": 1,
+      "servingUnit": "порция",
+      "calories": 360,
+      "protein": 29,
+      "carbs": 31,
+      "fat": 12
+    },
+    "created": "2026-05-12T10:30:00.000Z"
+  }
+]

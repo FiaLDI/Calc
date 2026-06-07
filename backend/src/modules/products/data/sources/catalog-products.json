@@ -1,0 +1,47 @@
+[
+  {
+    "uid": "catalog-greek-yogurt",
+    "displayName": "Greek Yogurt",
+    "serving": {
+      "value": 100,
+      "unit": "г"
+    },
+    "nutrition": {
+      "energyKcal": 73,
+      "proteins": 10,
+      "carbohydrates": 3.6,
+      "fats": 2
+    },
+    "syncedAt": "2026-05-11T09:00:00.000Z"
+  },
+  {
+    "uid": "catalog-banana",
+    "displayName": "Banana",
+    "serving": {
+      "value": 100,
+      "unit": "г"
+    },
+    "nutrition": {
+      "energyKcal": 89,
+      "proteins": 1.1,
+      "carbohydrates": 22.8,
+      "fats": 0.3
+    },
+    "syncedAt": "2026-05-11T09:10:00.000Z"
+  },
+  {
+    "uid": "catalog-peanut-butter",
+    "displayName": "Peanut Butter",
+    "serving": {
+      "value": 100,
+      "unit": "г"
+    },
+    "nutrition": {
+      "energyKcal": 588,
+      "proteins": 25,
+      "carbohydrates": 20,
+      "fats": 50
+    },
+    "syncedAt": "2026-05-11T09:20:00.000Z"
+  }
+]

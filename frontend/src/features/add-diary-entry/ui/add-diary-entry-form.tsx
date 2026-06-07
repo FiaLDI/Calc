@@ -16,25 +16,28 @@ export const AddDiaryEntryForm = observer(() => {
   const [servings, setServings] = useState("1");
   const [mealType, setMealType] = useState<MealType>("Завтрак");
 
+  const products = nutritionStore.products;
+  const productsSignature = products.map((product) => product.id).join("|");
+
   useEffect(() => {
-    if (!nutritionStore.products.length) {
+    const productIds = productsSignature ? productsSignature.split("|") : [];
+    const firstProductId = productIds[0] || "";
+
+    if (!firstProductId) {
       setSelectedProductId("");
       return;
     }
 
     setSelectedProductId((currentId) => {
-      if (
-        currentId &&
-        nutritionStore.products.some((product) => product.id === currentId)
-      ) {
+      if (currentId && productIds.includes(currentId)) {
         return currentId;
       }
 
-      return nutritionStore.products[0].id;
+      return firstProductId;
     });
-  }, [nutritionStore.products.length]);
+  }, [productsSignature]);
 
-  const selectedProduct = nutritionStore.products.find(
+  const selectedProduct = products.find(
     (product) => product.id === selectedProductId
   );
 
@@ -70,13 +73,13 @@ export const AddDiaryEntryForm = observer(() => {
             onChange={(event) => setSelectedProductId(event.target.value)}
             className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
           >
-            {nutritionStore.products.length === 0 ? (
-              <option value="">Сначала добавь продукт в базу</option>
+            {products.length === 0 ? (
+              <option value="">Сначала дождись каталога или добавь продукт вручную</option>
             ) : null}
 
-            {nutritionStore.products.map((product) => (
+            {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.name}
+                {product.name} · {product.sourceLabel}
               </option>
             ))}
           </select>
@@ -127,9 +130,15 @@ export const AddDiaryEntryForm = observer(() => {
             <>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold text-zinc-900">
-                    {selectedProduct.name}
-                  </h3>
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-zinc-900">
+                      {selectedProduct.name}
+                    </h3>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-600">
+                      {selectedProduct.sourceLabel}
+                    </span>
+                  </div>
+
                   <p className="text-sm text-zinc-500">
                     {parsedServings} x {selectedProduct.amountValue}{" "}
                     {selectedProduct.amountUnit} · {mealType}
@@ -160,8 +169,8 @@ export const AddDiaryEntryForm = observer(() => {
             </>
           ) : (
             <p className="text-sm text-zinc-500">
-              Когда в базе появится хотя бы один продукт, здесь появится расчет
-              записи.
+              Когда в каталоге появится хотя бы один продукт, здесь появится
+              расчет записи.
             </p>
           )}
         </div>

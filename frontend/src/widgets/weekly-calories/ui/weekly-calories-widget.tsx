@@ -18,7 +18,7 @@ export const WeeklyCaloriesWidget = observer(() => {
   const { hasSize, height, ref, width } = useElementSize<HTMLDivElement>();
 
   return (
-    <div className="min-w-0 w-full rounded-[2rem] bg-white p-6 shadow-xl">
+    <div className="min-w-0 w-full rounded-4xl bg-white p-6 shadow-xl">
       <div className="mb-5 flex items-start justify-between">
         <div>
           <p className="text-sm text-zinc-400">Последние 7 дней</p>

@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useLayoutEffect,
   useState,
   type PropsWithChildren,
@@ -26,6 +27,10 @@ export const NutritionStoreProvider = ({
 
   useLayoutEffect(() => {
     store.hydrate();
+  }, [store]);
+
+  useEffect(() => {
+    void store.loadRemoteProducts();
   }, [store]);
 
   return (

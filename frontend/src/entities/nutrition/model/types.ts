@@ -14,6 +14,9 @@ export type Product = {
   carbs: number;
   fat: number;
   createdAt: string;
+  sourceKey: string;
+  sourceLabel: string;
+  isReadonly: boolean;
 };
 
 export type DiaryEntry = {

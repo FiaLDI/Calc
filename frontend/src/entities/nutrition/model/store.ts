@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import { fetchProductsFromApi } from "@/shared/api/products";
 
 import {
   addDays,
@@ -23,7 +24,13 @@ type StoreSnapshot = {
   targetCalories: number;
 };
 
-type ProductDraft = Omit<Product, "createdAt" | "id">;
+type ProductDraft = Omit<
+  Product,
+  "createdAt" | "id" | "isReadonly" | "sourceKey" | "sourceLabel"
+>;
+
+const CUSTOM_SOURCE_KEY = "custom";
+const CUSTOM_SOURCE_LABEL = "Мои продукты";
 
 const createId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -69,6 +76,15 @@ const sanitizeProduct = (value: unknown): Product | null => {
     carbs: normalizeNonNegative(candidate.carbs ?? 0),
     fat: normalizeNonNegative(candidate.fat ?? 0),
     createdAt: normalizeTimestamp(candidate.createdAt),
+    sourceKey:
+      typeof candidate.sourceKey === "string" && candidate.sourceKey.trim()
+        ? candidate.sourceKey
+        : CUSTOM_SOURCE_KEY,
+    sourceLabel:
+      typeof candidate.sourceLabel === "string" && candidate.sourceLabel.trim()
+        ? candidate.sourceLabel
+        : CUSTOM_SOURCE_LABEL,
+    isReadonly: candidate.isReadonly === true,
   };
 };
 
@@ -120,10 +136,13 @@ const sanitizeEntry = (value: unknown): DiaryEntry | null => {
 
 class NutritionStore {
   entries: DiaryEntry[] = [];
-  products: Product[] = [];
+  customProducts: Product[] = [];
+  remoteProducts: Product[] = [];
   selectedDate: string;
   targetCalories = DEFAULT_TARGET_CALORIES;
   isHydrated = false;
+  isRemoteProductsLoading = false;
+  remoteProductsError = "";
 
   constructor(initialDateKey = formatDateKey(new Date())) {
     this.selectedDate = initialDateKey;
@@ -149,7 +168,7 @@ class NutritionStore {
             .map((entry) => sanitizeEntry(entry))
             .filter((entry): entry is DiaryEntry => entry !== null)
         : [];
-      this.products = Array.isArray(parsedState.products)
+      this.customProducts = Array.isArray(parsedState.products)
         ? parsedState.products
             .map((product) => sanitizeProduct(product))
             .filter((product): product is Product => product !== null)
@@ -163,7 +182,7 @@ class NutritionStore {
       );
     } catch {
       this.entries = [];
-      this.products = [];
+      this.customProducts = [];
       this.selectedDate = formatDateKey(new Date());
       this.targetCalories = DEFAULT_TARGET_CALORIES;
     } finally {
@@ -178,12 +197,41 @@ class NutritionStore {
 
     const snapshot: StoreSnapshot = {
       entries: this.entries,
-      products: this.products,
+      products: this.customProducts,
       selectedDate: this.selectedDate,
       targetCalories: this.targetCalories,
     };
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  }
+
+  async loadRemoteProducts() {
+    if (typeof window === "undefined" || this.isRemoteProductsLoading) {
+      return;
+    }
+
+    this.isRemoteProductsLoading = true;
+    this.remoteProductsError = "";
+
+    try {
+      const products = await fetchProductsFromApi();
+
+      this.remoteProducts = products
+        .map((product) =>
+          sanitizeProduct({
+            ...product,
+            isReadonly: true,
+          })
+        )
+        .filter((product): product is Product => product !== null);
+    } catch (error) {
+      this.remoteProductsError =
+        error instanceof Error
+          ? error.message
+          : "Не удалось загрузить каталог продуктов.";
+    } finally {
+      this.isRemoteProductsLoading = false;
+    }
   }
 
   ensureHydrated() {
@@ -249,19 +297,24 @@ class NutritionStore {
       carbs: normalizeNonNegative(draft.carbs),
       fat: normalizeNonNegative(draft.fat),
       createdAt: new Date().toISOString(),
+      sourceKey: CUSTOM_SOURCE_KEY,
+      sourceLabel: CUSTOM_SOURCE_LABEL,
+      isReadonly: false,
     };
 
     if (!product.name) {
       return;
     }
 
-    this.products.unshift(product);
+    this.customProducts.unshift(product);
     this.persist();
   }
 
   removeProduct(productId: string) {
     this.ensureHydrated();
-    this.products = this.products.filter((product) => product.id !== productId);
+    this.customProducts = this.customProducts.filter(
+      (product) => product.id !== productId
+    );
     this.persist();
   }
 
@@ -302,6 +355,19 @@ class NutritionStore {
     this.ensureHydrated();
     this.entries = this.entries.filter((entry) => entry.id !== entryId);
     this.persist();
+  }
+
+  get products() {
+    const seenProductIds = new Set<string>();
+
+    return [...this.customProducts, ...this.remoteProducts].filter((product) => {
+      if (seenProductIds.has(product.id)) {
+        return false;
+      }
+
+      seenProductIds.add(product.id);
+      return true;
+    });
   }
 
   get todayDateKey() {

@@ -6,15 +6,17 @@ import { useNutritionStore } from "@/entities/nutrition";
 
 export const ProductLibraryWidget = observer(() => {
   const nutritionStore = useNutritionStore();
+  const hasProducts = nutritionStore.products.length > 0;
 
   return (
-    <div className="w-full rounded-[2rem] bg-white p-6 shadow-xl">
+    <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-sm text-zinc-400">База продуктов</p>
-          <h2 className="text-2xl font-bold">Мои продукты</h2>
+          <h2 className="text-2xl font-bold">Каталог и мои продукты</h2>
           <p className="mt-1 text-xs text-zinc-400">
-            Удаление из базы не затрагивает историю в дневнике.
+            Серверные продукты приходят из нескольких баз, а вручную добавленные
+            остаются только твоими.
           </p>
         </div>
 
@@ -23,12 +25,26 @@ export const ProductLibraryWidget = observer(() => {
         </div>
       </div>
 
-      {nutritionStore.products.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
-          База пока пустая. Добавь продукт через форму выше, и он появится
-          здесь.
+      {nutritionStore.remoteProductsError ? (
+        <div className="mb-4 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          {nutritionStore.remoteProductsError}
         </div>
-      ) : (
+      ) : null}
+
+      {!hasProducts && nutritionStore.isRemoteProductsLoading ? (
+        <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
+          Загружаем продукты с сервера...
+        </div>
+      ) : null}
+
+      {!hasProducts && !nutritionStore.isRemoteProductsLoading ? (
+        <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
+          Каталог пока пуст. Проверь backend или добавь продукт вручную через форму
+          выше.
+        </div>
+      ) : null}
+
+      {hasProducts ? (
         <div className="space-y-3">
           {nutritionStore.products.map((product) => (
             <div
@@ -37,7 +53,19 @@ export const ProductLibraryWidget = observer(() => {
             >
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold">{product.name}</h3>
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold">{product.name}</h3>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                        product.isReadonly
+                          ? "bg-sky-100 text-sky-700"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {product.sourceLabel}
+                    </span>
+                  </div>
+
                   <p className="text-sm text-zinc-400">
                     {product.amountValue} {product.amountUnit}
                   </p>
@@ -49,21 +77,23 @@ export const ProductLibraryWidget = observer(() => {
                     <p className="text-xs text-zinc-400">ккал</p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const shouldRemove = window.confirm(
-                        "Удалить продукт из базы? История в дневнике сохранится."
-                      );
+                  {!product.isReadonly ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const shouldRemove = window.confirm(
+                          "Удалить продукт из личной базы? История в дневнике сохранится."
+                        );
 
-                      if (shouldRemove) {
-                        nutritionStore.removeProduct(product.id);
-                      }
-                    }}
-                    className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
-                  >
-                    Удалить из базы
-                  </button>
+                        if (shouldRemove) {
+                          nutritionStore.removeProduct(product.id);
+                        }
+                      }}
+                      className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
+                    >
+                      Удалить
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -83,7 +113,7 @@ export const ProductLibraryWidget = observer(() => {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 });
