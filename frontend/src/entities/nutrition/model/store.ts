@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { fetchProductsFromApi } from "@/shared/api/products";
 
 import {
@@ -15,7 +15,16 @@ import {
   roundToOneDecimal,
 } from "../lib/number";
 import { DEFAULT_TARGET_CALORIES, STORAGE_KEY } from "./constants";
-import type { DiaryEntry, MealType, Product } from "./types";
+import {
+  MEAL_TYPES,
+  PRODUCT_CATEGORIES,
+  PRODUCT_UNITS,
+  type DiaryEntry,
+  type MealType,
+  type Product,
+  type ProductCategory,
+  type ProductUnit,
+} from "./types";
 
 type StoreSnapshot = {
   entries: DiaryEntry[];
@@ -31,6 +40,23 @@ type ProductDraft = Omit<
 
 const CUSTOM_SOURCE_KEY = "custom";
 const CUSTOM_SOURCE_LABEL = "Мои продукты";
+const DEFAULT_PRODUCT_CATEGORY: ProductCategory = "Другое";
+const DEFAULT_PRODUCT_UNIT: ProductUnit = "г";
+const DEFAULT_MEAL_TYPE: MealType = "Завтрак";
+
+const isProductUnit = (value: unknown): value is ProductUnit =>
+  typeof value === "string" &&
+  (PRODUCT_UNITS as readonly string[]).includes(value);
+
+const isProductCategory = (value: unknown): value is ProductCategory =>
+  typeof value === "string" &&
+  (PRODUCT_CATEGORIES as readonly string[]).includes(value);
+
+const isMealType = (value: unknown): value is MealType =>
+  typeof value === "string" && (MEAL_TYPES as readonly string[]).includes(value);
+
+const normalizeOptionalString = (value: unknown) =>
+  typeof value === "string" ? value.trim() : "";
 
 const createId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -63,19 +89,20 @@ const sanitizeProduct = (value: unknown): Product | null => {
         ? candidate.id
         : createId(),
     name,
+    category: isProductCategory(candidate.category)
+      ? candidate.category
+      : DEFAULT_PRODUCT_CATEGORY,
     amountValue: normalizePositive(candidate.amountValue ?? 0, 100),
-    amountUnit:
-      candidate.amountUnit === "г" ||
-      candidate.amountUnit === "мл" ||
-      candidate.amountUnit === "шт" ||
-      candidate.amountUnit === "порция"
-        ? candidate.amountUnit
-        : "г",
+    amountUnit: isProductUnit(candidate.amountUnit)
+      ? candidate.amountUnit
+      : DEFAULT_PRODUCT_UNIT,
     calories: normalizeNonNegative(candidate.calories ?? 0),
     protein: normalizeNonNegative(candidate.protein ?? 0),
     carbs: normalizeNonNegative(candidate.carbs ?? 0),
     fat: normalizeNonNegative(candidate.fat ?? 0),
     createdAt: normalizeTimestamp(candidate.createdAt),
+    imageAlt: normalizeOptionalString(candidate.imageAlt) || name,
+    imageUrl: normalizeOptionalString(candidate.imageUrl),
     sourceKey:
       typeof candidate.sourceKey === "string" && candidate.sourceKey.trim()
         ? candidate.sourceKey
@@ -109,22 +136,17 @@ const sanitizeEntry = (value: unknown): DiaryEntry | null => {
     productId:
       typeof candidate.productId === "string" ? candidate.productId : "",
     productName,
+    productImageAlt:
+      normalizeOptionalString(candidate.productImageAlt) || productName,
+    productImageUrl: normalizeOptionalString(candidate.productImageUrl),
     amountValue: normalizePositive(candidate.amountValue ?? 0, 100),
-    amountUnit:
-      candidate.amountUnit === "г" ||
-      candidate.amountUnit === "мл" ||
-      candidate.amountUnit === "шт" ||
-      candidate.amountUnit === "порция"
-        ? candidate.amountUnit
-        : "г",
+    amountUnit: isProductUnit(candidate.amountUnit)
+      ? candidate.amountUnit
+      : DEFAULT_PRODUCT_UNIT,
     servings: normalizePositive(candidate.servings ?? 0, 1),
-    mealType:
-      candidate.mealType === "Завтрак" ||
-      candidate.mealType === "Обед" ||
-      candidate.mealType === "Ужин" ||
-      candidate.mealType === "Перекус"
-        ? candidate.mealType
-        : "Завтрак",
+    mealType: isMealType(candidate.mealType)
+      ? candidate.mealType
+      : DEFAULT_MEAL_TYPE,
     date: candidate.date,
     calories: normalizeNonNegative(candidate.calories ?? 0),
     protein: normalizeNonNegative(candidate.protein ?? 0),
@@ -139,6 +161,7 @@ class NutritionStore {
   customProducts: Product[] = [];
   remoteProducts: Product[] = [];
   selectedDate: string;
+  todayDateKey: string;
   targetCalories = DEFAULT_TARGET_CALORIES;
   isHydrated = false;
   isRemoteProductsLoading = false;
@@ -146,6 +169,7 @@ class NutritionStore {
 
   constructor(initialDateKey = formatDateKey(new Date())) {
     this.selectedDate = initialDateKey;
+    this.todayDateKey = initialDateKey;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -155,6 +179,7 @@ class NutritionStore {
     }
 
     try {
+      this.todayDateKey = formatDateKey(new Date());
       const rawState = window.localStorage.getItem(STORAGE_KEY);
 
       if (!rawState) {
@@ -183,7 +208,8 @@ class NutritionStore {
     } catch {
       this.entries = [];
       this.customProducts = [];
-      this.selectedDate = formatDateKey(new Date());
+      this.todayDateKey = formatDateKey(new Date());
+      this.selectedDate = this.todayDateKey;
       this.targetCalories = DEFAULT_TARGET_CALORIES;
     } finally {
       this.isHydrated = true;
@@ -215,8 +241,7 @@ class NutritionStore {
 
     try {
       const products = await fetchProductsFromApi();
-
-      this.remoteProducts = products
+      const remoteProducts = products
         .map((product) =>
           sanitizeProduct({
             ...product,
@@ -224,13 +249,21 @@ class NutritionStore {
           })
         )
         .filter((product): product is Product => product !== null);
+
+      runInAction(() => {
+        this.remoteProducts = remoteProducts;
+      });
     } catch (error) {
-      this.remoteProductsError =
-        error instanceof Error
-          ? error.message
-          : "Не удалось загрузить каталог продуктов.";
+      runInAction(() => {
+        this.remoteProductsError =
+          error instanceof Error
+            ? error.message
+            : "Не удалось загрузить каталог продуктов.";
+      });
     } finally {
-      this.isRemoteProductsLoading = false;
+      runInAction(() => {
+        this.isRemoteProductsLoading = false;
+      });
     }
   }
 
@@ -291,12 +324,17 @@ class NutritionStore {
       ...draft,
       id: createId(),
       name: draft.name.trim(),
+      category: isProductCategory(draft.category)
+        ? draft.category
+        : DEFAULT_PRODUCT_CATEGORY,
       amountValue: normalizePositive(draft.amountValue, 100),
       calories: normalizeNonNegative(draft.calories),
       protein: normalizeNonNegative(draft.protein),
       carbs: normalizeNonNegative(draft.carbs),
       fat: normalizeNonNegative(draft.fat),
       createdAt: new Date().toISOString(),
+      imageAlt: draft.imageAlt.trim() || draft.name.trim(),
+      imageUrl: draft.imageUrl.trim(),
       sourceKey: CUSTOM_SOURCE_KEY,
       sourceLabel: CUSTOM_SOURCE_LABEL,
       isReadonly: false,
@@ -335,6 +373,8 @@ class NutritionStore {
       id: createId(),
       productId: product.id,
       productName: product.name,
+      productImageAlt: product.imageAlt || product.name,
+      productImageUrl: product.imageUrl,
       amountValue: product.amountValue,
       amountUnit: product.amountUnit,
       servings: normalizedServings,
@@ -348,6 +388,46 @@ class NutritionStore {
     };
 
     this.entries.unshift(entry);
+    this.persist();
+  }
+
+  updateEntry(
+    entryId: string,
+    productId: string,
+    servings: number,
+    mealType: MealType
+  ) {
+    this.ensureHydrated();
+    const product = this.products.find((item) => item.id === productId);
+
+    if (!product) {
+      return;
+    }
+
+    const normalizedServings = Math.max(
+      0.1,
+      roundToOneDecimal(servings || 1)
+    );
+
+    this.entries = this.entries.map((entry) =>
+      entry.id === entryId
+        ? {
+            ...entry,
+            productId: product.id,
+            productName: product.name,
+            productImageAlt: product.imageAlt || product.name,
+            productImageUrl: product.imageUrl,
+            amountValue: product.amountValue,
+            amountUnit: product.amountUnit,
+            servings: normalizedServings,
+            mealType,
+            calories: Math.round(product.calories * normalizedServings),
+            protein: roundToOneDecimal(product.protein * normalizedServings),
+            carbs: roundToOneDecimal(product.carbs * normalizedServings),
+            fat: roundToOneDecimal(product.fat * normalizedServings),
+          }
+        : entry
+    );
     this.persist();
   }
 
@@ -368,10 +448,6 @@ class NutritionStore {
       seenProductIds.add(product.id);
       return true;
     });
-  }
-
-  get todayDateKey() {
-    return formatDateKey(new Date());
   }
 
   get canSelectNextDay() {

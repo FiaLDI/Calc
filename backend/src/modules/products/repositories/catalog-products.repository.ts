@@ -1,9 +1,19 @@
 import catalogProducts from "../data/sources/catalog-products.json" with { type: "json" };
-import type { ProductDto, ProductSourceMeta, ProductUnit } from "../model/types.js";
+import type {
+  ProductCategory,
+  ProductDto,
+  ProductSourceMeta,
+  ProductUnit,
+} from "../model/types.js";
 import type { ProductSourceRepository } from "./product-source.repository.js";
 
 type CatalogProductRecord = {
+  categoryLabel: ProductCategory;
   displayName: string;
+  media: {
+    alt: string;
+    thumbnailUrl: string;
+  };
   nutrition: {
     carbohydrates: number;
     energyKcal: number;
@@ -35,9 +45,12 @@ export class CatalogProductsRepository implements ProductSourceRepository {
       amountValue: product.serving.value,
       calories: product.nutrition.energyKcal,
       carbs: product.nutrition.carbohydrates,
+      category: product.categoryLabel,
       createdAt: product.syncedAt,
       fat: product.nutrition.fats,
       id: `${META.key}:${product.uid}`,
+      imageAlt: product.media.alt,
+      imageUrl: product.media.thumbnailUrl,
       isReadonly: true as const,
       name: product.displayName,
       protein: product.nutrition.proteins,

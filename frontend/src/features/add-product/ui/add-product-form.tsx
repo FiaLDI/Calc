@@ -3,7 +3,9 @@
 import { useState } from "react";
 
 import {
+  PRODUCT_CATEGORIES,
   PRODUCT_UNITS,
+  type ProductCategory,
   type ProductUnit,
   useNutritionStore,
 } from "@/entities/nutrition";
@@ -13,7 +15,9 @@ type ProductFormState = {
   amountValue: string;
   calories: string;
   carbs: string;
+  category: ProductCategory;
   fat: string;
+  imageUrl: string;
   name: string;
   protein: string;
 };
@@ -23,7 +27,9 @@ const initialFormState: ProductFormState = {
   amountValue: "100",
   calories: "",
   carbs: "",
+  category: "Другое",
   fat: "",
+  imageUrl: "",
   name: "",
   protein: "",
 };
@@ -50,12 +56,15 @@ export const AddProductForm = () => {
 
           nutritionStore.addProduct({
             name: formState.name,
+            category: formState.category,
             amountValue: Number(formState.amountValue),
             amountUnit: formState.amountUnit,
             calories: Number(formState.calories),
             protein: Number(formState.protein),
             carbs: Number(formState.carbs),
             fat: Number(formState.fat),
+            imageAlt: formState.name,
+            imageUrl: formState.imageUrl,
           });
 
           setFormState(initialFormState);
@@ -77,6 +86,28 @@ export const AddProductForm = () => {
             placeholder="Например: Овсянка"
             className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
           />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-zinc-600">
+            Категория
+          </label>
+          <select
+            value={formState.category}
+            onChange={(event) =>
+              setFormState((currentState) => ({
+                ...currentState,
+                category: event.target.value as ProductCategory,
+              }))
+            }
+            className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
+          >
+            {PRODUCT_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="grid grid-cols-[1fr_112px] gap-3">
@@ -120,6 +151,25 @@ export const AddProductForm = () => {
               ))}
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-zinc-600">
+            Картинка
+          </label>
+          <input
+            type="text"
+            inputMode="url"
+            value={formState.imageUrl}
+            onChange={(event) =>
+              setFormState((currentState) => ({
+                ...currentState,
+                imageUrl: event.target.value,
+              }))
+            }
+            placeholder="/products/banana.png"
+            className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
+          />
         </div>
 
         <div>

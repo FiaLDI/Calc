@@ -1,10 +1,18 @@
 import recipeProducts from "../data/sources/recipe-products.json" with { type: "json" };
-import type { ProductDto, ProductSourceMeta, ProductUnit } from "../model/types.js";
+import type {
+  ProductCategory,
+  ProductDto,
+  ProductSourceMeta,
+  ProductUnit,
+} from "../model/types.js";
 import type { ProductSourceRepository } from "./product-source.repository.js";
 
 type RecipeProductRecord = {
+  category: ProductCategory;
   code: string;
   created: string;
+  imageAlt: string;
+  imageUrl: string;
   macrosPerPortion: {
     calories: number;
     carbs: number;
@@ -33,9 +41,12 @@ export class RecipeProductsRepository implements ProductSourceRepository {
       amountValue: product.macrosPerPortion.servingAmount,
       calories: product.macrosPerPortion.calories,
       carbs: product.macrosPerPortion.carbs,
+      category: product.category,
       createdAt: product.created,
       fat: product.macrosPerPortion.fat,
       id: `${META.key}:${product.code}`,
+      imageAlt: product.imageAlt,
+      imageUrl: product.imageUrl,
       isReadonly: true as const,
       name: product.name,
       protein: product.macrosPerPortion.protein,

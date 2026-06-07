@@ -35,7 +35,17 @@ const getStringListQuery = (value: unknown) => {
 const normalizePositiveInteger = (value: string, fallback: number) => {
   const parsedValue = Number(value);
 
-  if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+  if (!value.trim() || !Number.isInteger(parsedValue) || parsedValue < 1) {
+    return fallback;
+  }
+
+  return parsedValue;
+};
+
+const normalizeNonNegativeInteger = (value: string, fallback: number) => {
+  const parsedValue = Number(value);
+
+  if (!value.trim() || !Number.isInteger(parsedValue) || parsedValue < 0) {
     return fallback;
   }
 
@@ -48,7 +58,10 @@ export class ProductsController {
   getProducts = async (request: Request, response: Response<ProductsListResponse>) => {
     const query: ProductListQuery = {
       limit: normalizePositiveInteger(getSingleQueryValue(request.query.limit), 50),
-      offset: normalizePositiveInteger(getSingleQueryValue(request.query.offset), 0),
+      offset: normalizeNonNegativeInteger(
+        getSingleQueryValue(request.query.offset),
+        0
+      ),
       search:
         getSingleQueryValue(request.query.search) ||
         getSingleQueryValue(request.query.q),

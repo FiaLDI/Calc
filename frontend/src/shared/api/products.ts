@@ -3,9 +3,18 @@ export type ProductsApiProduct = {
   amountValue: number;
   calories: number;
   carbs: number;
+  category:
+    | "Крупы"
+    | "Молочные"
+    | "Фрукты"
+    | "Орехи и пасты"
+    | "Готовые блюда"
+    | "Другое";
   createdAt: string;
   fat: number;
   id: string;
+  imageAlt: string;
+  imageUrl: string;
   isReadonly: boolean;
   name: string;
   protein: number;

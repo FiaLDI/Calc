@@ -1,10 +1,18 @@
 import warehouseProducts from "../data/sources/warehouse-products.json" with { type: "json" };
-import type { ProductDto, ProductSourceMeta, ProductUnit } from "../model/types.js";
+import type {
+  ProductCategory,
+  ProductDto,
+  ProductSourceMeta,
+  ProductUnit,
+} from "../model/types.js";
 import type { ProductSourceRepository } from "./product-source.repository.js";
 
 type WarehouseProductRecord = {
   carbGrams: number;
+  category: ProductCategory;
   fatGrams: number;
+  imageDescription: string;
+  imagePath: string;
   insertedAt: string;
   kcal: number;
   portionSize: number;
@@ -31,9 +39,12 @@ export class WarehouseProductsRepository implements ProductSourceRepository {
       amountValue: product.portionSize,
       calories: product.kcal,
       carbs: product.carbGrams,
+      category: product.category,
       createdAt: product.insertedAt,
       fat: product.fatGrams,
       id: `${META.key}:${product.warehouseId}`,
+      imageAlt: product.imageDescription,
+      imageUrl: product.imagePath,
       isReadonly: true as const,
       name: product.title,
       protein: product.proteinGrams,

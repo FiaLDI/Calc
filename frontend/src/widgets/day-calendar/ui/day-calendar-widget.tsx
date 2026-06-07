@@ -1,13 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { observer } from "mobx-react-lite";
 
 import { useNutritionStore } from "@/entities/nutrition";
 
 export const DayCalendarWidget = observer(() => {
   const nutritionStore = useNutritionStore();
+  const [isMounted, setIsMounted] = useState(false);
   const isTodaySelected =
     nutritionStore.selectedDate === nutritionStore.todayDateKey;
+  const canSelectNextDay = isMounted && nutritionStore.canSelectNextDay;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <div className="w-full rounded-4xl bg-white p-5 shadow-xl">
@@ -34,9 +42,9 @@ export const DayCalendarWidget = observer(() => {
           <button
             type="button"
             onClick={nutritionStore.selectNextDay}
-            disabled={!nutritionStore.canSelectNextDay}
+            disabled={!canSelectNextDay}
             className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-semibold transition ${
-              nutritionStore.canSelectNextDay
+              canSelectNextDay
                 ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                 : "cursor-not-allowed bg-zinc-100 text-zinc-300"
             }`}

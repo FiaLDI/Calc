@@ -2,6 +2,9 @@
   {
     "warehouseId": "warehouse-oatmeal",
     "title": "Oatmeal",
+    "category": "Крупы",
+    "imagePath": "/products/oatmeal.png",
+    "imageDescription": "Oatmeal in a bowl",
     "portionSize": 100,
     "portionUnit": "г",
     "kcal": 366,
@@ -13,6 +16,9 @@
   {
     "warehouseId": "warehouse-buckwheat",
     "title": "Buckwheat",
+    "category": "Крупы",
+    "imagePath": "/products/buckwheat.png",
+    "imageDescription": "Buckwheat in a bowl",
     "portionSize": 100,
     "portionUnit": "г",
     "kcal": 343,
@@ -24,6 +30,9 @@
   {
     "warehouseId": "warehouse-cottage-cheese",
     "title": "Cottage Cheese 5%",
+    "category": "Молочные",
+    "imagePath": "/products/cottage-cheese.png",
+    "imageDescription": "Cottage cheese in a small dish",
     "portionSize": 100,
     "portionUnit": "г",
     "kcal": 121,

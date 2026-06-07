@@ -2,6 +2,9 @@
   {
     "code": "recipe-chicken-rice-bowl",
     "name": "Chicken Rice Bowl",
+    "category": "Готовые блюда",
+    "imageUrl": "/products/chicken-rice-bowl.png",
+    "imageAlt": "Chicken rice bowl with vegetables",
     "macrosPerPortion": {
       "servingAmount": 1,
       "servingUnit": "порция",
@@ -15,6 +18,9 @@
   {
     "code": "recipe-salmon-avocado-toast",
     "name": "Salmon Avocado Toast",
+    "category": "Готовые блюда",
+    "imageUrl": "/products/salmon-avocado-toast.png",
+    "imageAlt": "Salmon avocado toast on a plate",
     "macrosPerPortion": {
       "servingAmount": 1,
       "servingUnit": "порция",
@@ -28,6 +34,9 @@
   {
     "code": "recipe-protein-pancakes",
     "name": "Protein Pancakes",
+    "category": "Готовые блюда",
+    "imageUrl": "/products/protein-pancakes.png",
+    "imageAlt": "Protein pancakes with toppings",
     "macrosPerPortion": {
       "servingAmount": 1,
       "servingUnit": "порция",

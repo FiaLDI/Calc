@@ -2,6 +2,11 @@
   {
     "uid": "catalog-greek-yogurt",
     "displayName": "Greek Yogurt",
+    "categoryLabel": "Молочные",
+    "media": {
+      "thumbnailUrl": "/products/greek-yogurt.png",
+      "alt": "Greek yogurt in a bowl"
+    },
     "serving": {
       "value": 100,
       "unit": "г"
@@ -17,6 +22,11 @@
   {
     "uid": "catalog-banana",
     "displayName": "Banana",
+    "categoryLabel": "Фрукты",
+    "media": {
+      "thumbnailUrl": "/products/banana.png",
+      "alt": "Banana on a light surface"
+    },
     "serving": {
       "value": 100,
       "unit": "г"
@@ -32,6 +42,11 @@
   {
     "uid": "catalog-peanut-butter",
     "displayName": "Peanut Butter",
+    "categoryLabel": "Орехи и пасты",
+    "media": {
+      "thumbnailUrl": "/products/peanut-butter.png",
+      "alt": "Peanut butter jar with spoon"
+    },
     "serving": {
       "value": 100,
       "unit": "г"

@@ -7,9 +7,11 @@ export {
 } from "./model/store-provider";
 export {
   MEAL_TYPES,
+  PRODUCT_CATEGORIES,
   PRODUCT_UNITS,
   type DiaryEntry,
   type MealType,
   type Product,
+  type ProductCategory,
   type ProductUnit,
 } from "./model/types";
