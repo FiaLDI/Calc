@@ -1,5 +1,4 @@
 import { AddDiaryEntryForm } from "@/features/add-diary-entry";
-import { AddProductForm } from "@/features/add-product";
 import { CalorieSummaryWidget } from "@/widgets/calorie-summary";
 import { DayCalendarWidget } from "@/widgets/day-calendar";
 import { DiaryEntriesWidget } from "@/widgets/diary-entries";
@@ -26,7 +25,6 @@ export const HomePage = () => {
         </div>
 
         <div className="grid min-w-0 gap-4 self-start">
-          <AddProductForm />
           <ProductLibraryWidget />
         </div>
       </div>

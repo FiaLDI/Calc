@@ -14,13 +14,23 @@ import {
   normalizePositive,
   roundToOneDecimal,
 } from "../lib/number";
-import { DEFAULT_TARGET_CALORIES, STORAGE_KEY } from "./constants";
+import {
+  DEFAULT_NUTRITION_GOAL,
+  DEFAULT_TARGET_CALORIES,
+  DEFAULT_TARGET_CARBS,
+  DEFAULT_TARGET_FAT,
+  DEFAULT_TARGET_PROTEIN,
+  DEFAULT_TARGET_WEIGHT_KG,
+  STORAGE_KEY,
+} from "./constants";
 import {
   MEAL_TYPES,
+  NUTRITION_GOALS,
   PRODUCT_CATEGORIES,
   PRODUCT_UNITS,
   type DiaryEntry,
   type MealType,
+  type NutritionGoal,
   type Product,
   type ProductCategory,
   type ProductUnit,
@@ -30,7 +40,12 @@ type StoreSnapshot = {
   entries: DiaryEntry[];
   products: Product[];
   selectedDate: string;
+  nutritionGoal: NutritionGoal;
+  targetCarbs: number;
   targetCalories: number;
+  targetFat: number;
+  targetProtein: number;
+  targetWeightKg: number;
 };
 
 type ProductDraft = Omit<
@@ -43,6 +58,31 @@ const CUSTOM_SOURCE_LABEL = "Мои продукты";
 const DEFAULT_PRODUCT_CATEGORY: ProductCategory = "Другое";
 const DEFAULT_PRODUCT_UNIT: ProductUnit = "г";
 const DEFAULT_MEAL_TYPE: MealType = "Завтрак";
+const DEFAULT_GOAL = DEFAULT_NUTRITION_GOAL as NutritionGoal;
+const NUTRITION_GOAL_SETTINGS: Record<
+  NutritionGoal,
+  {
+    caloriesPerKg: number;
+    fatPerKg: number;
+    proteinPerKg: number;
+  }
+> = {
+  Сушка: {
+    caloriesPerKg: 28,
+    fatPerKg: 0.8,
+    proteinPerKg: 2.1,
+  },
+  Поддержание: {
+    caloriesPerKg: 32,
+    fatPerKg: 0.9,
+    proteinPerKg: 1.7,
+  },
+  Набор: {
+    caloriesPerKg: 36,
+    fatPerKg: 1,
+    proteinPerKg: 1.9,
+  },
+};
 
 const isProductUnit = (value: unknown): value is ProductUnit =>
   typeof value === "string" &&
@@ -54,6 +94,10 @@ const isProductCategory = (value: unknown): value is ProductCategory =>
 
 const isMealType = (value: unknown): value is MealType =>
   typeof value === "string" && (MEAL_TYPES as readonly string[]).includes(value);
+
+const isNutritionGoal = (value: unknown): value is NutritionGoal =>
+  typeof value === "string" &&
+  (NUTRITION_GOALS as readonly string[]).includes(value);
 
 const normalizeOptionalString = (value: unknown) =>
   typeof value === "string" ? value.trim() : "";
@@ -163,6 +207,11 @@ class NutritionStore {
   selectedDate: string;
   todayDateKey: string;
   targetCalories = DEFAULT_TARGET_CALORIES;
+  targetProtein = DEFAULT_TARGET_PROTEIN;
+  targetCarbs = DEFAULT_TARGET_CARBS;
+  targetFat = DEFAULT_TARGET_FAT;
+  targetWeightKg = DEFAULT_TARGET_WEIGHT_KG;
+  nutritionGoal = DEFAULT_GOAL;
   isHydrated = false;
   isRemoteProductsLoading = false;
   remoteProductsError = "";
@@ -205,12 +254,36 @@ class NutritionStore {
         parsedState.targetCalories ?? 0,
         DEFAULT_TARGET_CALORIES
       );
+      this.targetProtein = normalizePositive(
+        parsedState.targetProtein ?? 0,
+        DEFAULT_TARGET_PROTEIN
+      );
+      this.targetCarbs = normalizePositive(
+        parsedState.targetCarbs ?? 0,
+        DEFAULT_TARGET_CARBS
+      );
+      this.targetFat = normalizePositive(
+        parsedState.targetFat ?? 0,
+        DEFAULT_TARGET_FAT
+      );
+      this.targetWeightKg = normalizePositive(
+        parsedState.targetWeightKg ?? 0,
+        DEFAULT_TARGET_WEIGHT_KG
+      );
+      this.nutritionGoal = isNutritionGoal(parsedState.nutritionGoal)
+        ? parsedState.nutritionGoal
+        : DEFAULT_GOAL;
     } catch {
       this.entries = [];
       this.customProducts = [];
       this.todayDateKey = formatDateKey(new Date());
       this.selectedDate = this.todayDateKey;
       this.targetCalories = DEFAULT_TARGET_CALORIES;
+      this.targetProtein = DEFAULT_TARGET_PROTEIN;
+      this.targetCarbs = DEFAULT_TARGET_CARBS;
+      this.targetFat = DEFAULT_TARGET_FAT;
+      this.targetWeightKg = DEFAULT_TARGET_WEIGHT_KG;
+      this.nutritionGoal = DEFAULT_GOAL;
     } finally {
       this.isHydrated = true;
     }
@@ -223,9 +296,14 @@ class NutritionStore {
 
     const snapshot: StoreSnapshot = {
       entries: this.entries,
+      nutritionGoal: this.nutritionGoal,
       products: this.customProducts,
       selectedDate: this.selectedDate,
+      targetCarbs: this.targetCarbs,
       targetCalories: this.targetCalories,
+      targetFat: this.targetFat,
+      targetProtein: this.targetProtein,
+      targetWeightKg: this.targetWeightKg,
     };
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
@@ -316,6 +394,48 @@ class NutritionStore {
     this.ensureHydrated();
     this.targetCalories = normalizePositive(Math.round(value), 1);
     this.persist();
+  }
+
+  setNutritionTargets(targets: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    goal?: NutritionGoal;
+    weightKg?: number;
+  }) {
+    this.ensureHydrated();
+    this.targetCalories = normalizePositive(Math.round(targets.calories), 1);
+    this.targetProtein = normalizePositive(targets.protein, 1);
+    this.targetCarbs = normalizePositive(targets.carbs, 1);
+    this.targetFat = normalizePositive(targets.fat, 1);
+    this.targetWeightKg = normalizePositive(
+      targets.weightKg ?? this.targetWeightKg,
+      DEFAULT_TARGET_WEIGHT_KG
+    );
+    this.nutritionGoal = isNutritionGoal(targets.goal)
+      ? targets.goal
+      : this.nutritionGoal;
+    this.persist();
+  }
+
+  calculateNutritionTargets(weightKg: number, goal: NutritionGoal) {
+    const normalizedWeight = normalizePositive(weightKg, DEFAULT_TARGET_WEIGHT_KG);
+    const settings = NUTRITION_GOAL_SETTINGS[goal];
+    const calories = Math.round(normalizedWeight * settings.caloriesPerKg);
+    const protein = Math.round(normalizedWeight * settings.proteinPerKg);
+    const fat = Math.round(normalizedWeight * settings.fatPerKg);
+    const carbs = Math.max(
+      1,
+      Math.round((calories - protein * 4 - fat * 9) / 4)
+    );
+
+    return {
+      calories,
+      protein,
+      carbs,
+      fat,
+    };
   }
 
   addProduct(draft: ProductDraft) {
@@ -500,9 +620,9 @@ class NutritionStore {
 
   get macroTargets() {
     return {
-      protein: Math.round((this.targetCalories * 0.3) / 4),
-      carbs: Math.round((this.targetCalories * 0.4) / 4),
-      fat: Math.round((this.targetCalories * 0.3) / 9),
+      protein: this.targetProtein,
+      carbs: this.targetCarbs,
+      fat: this.targetFat,
     };
   }
 

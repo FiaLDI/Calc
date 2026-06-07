@@ -5,11 +5,13 @@ import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
+import { AddProductForm } from "@/features/add-product";
 import {
   PRODUCT_CATEGORIES,
   type ProductCategory,
   useNutritionStore,
 } from "@/entities/nutrition";
+import { Modal, useModal } from "@/shared/ui/modal";
 
 const ALL_CATEGORIES = "all";
 const ALL_SOURCES = "all";
@@ -21,6 +23,7 @@ export const ProductLibraryWidget = observer(() => {
     ProductCategory | typeof ALL_CATEGORIES
   >(ALL_CATEGORIES);
   const [sourceFilter, setSourceFilter] = useState(ALL_SOURCES);
+  const addProductModal = useModal();
 
   const products = nutritionStore.products;
   const hasProducts = products.length > 0;
@@ -42,7 +45,7 @@ export const ProductLibraryWidget = observer(() => {
 
   return (
     <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-zinc-400">База продуктов</p>
           <h2 className="text-2xl font-bold">Каталог и мои продукты</h2>
@@ -52,8 +55,18 @@ export const ProductLibraryWidget = observer(() => {
           </p>
         </div>
 
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-bold text-emerald-600">
-          {products.length}
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-bold text-emerald-600">
+            {products.length}
+          </div>
+
+          <button
+            type="button"
+            onClick={addProductModal.open}
+            className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-zinc-800"
+          >
+            Добавить
+          </button>
         </div>
       </div>
 
@@ -213,6 +226,40 @@ export const ProductLibraryWidget = observer(() => {
           ))}
         </div>
       ) : null}
+
+      <Modal
+        isOpen={addProductModal.isOpen}
+        labelledBy="add-product-title"
+        onClose={addProductModal.close}
+      >
+        <div className="border-b border-zinc-100 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-zinc-400">Новый продукт</p>
+              <h3 id="add-product-title" className="text-2xl font-bold">
+                Добавить в базу
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              onClick={addProductModal.close}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xl font-semibold text-zinc-600 transition hover:bg-zinc-900 hover:text-white"
+              aria-label="Закрыть"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+          <AddProductForm
+            framed={false}
+            onCancel={addProductModal.close}
+            onSuccess={addProductModal.close}
+          />
+        </div>
+      </Modal>
     </div>
   );
 });

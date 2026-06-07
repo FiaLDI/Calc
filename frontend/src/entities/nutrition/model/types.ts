@@ -1,5 +1,6 @@
 export const PRODUCT_UNITS = ["г", "мл", "шт", "порция"] as const;
 export const MEAL_TYPES = ["Завтрак", "Обед", "Ужин", "Перекус"] as const;
+export const NUTRITION_GOALS = ["Сушка", "Поддержание", "Набор"] as const;
 export const PRODUCT_CATEGORIES = [
   "Крупы",
   "Молочные",
@@ -11,6 +12,7 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductUnit = (typeof PRODUCT_UNITS)[number];
 export type MealType = (typeof MEAL_TYPES)[number];
+export type NutritionGoal = (typeof NUTRITION_GOALS)[number];
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
 export type Product = {

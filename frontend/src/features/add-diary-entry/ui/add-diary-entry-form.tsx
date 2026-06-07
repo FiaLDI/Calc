@@ -12,6 +12,7 @@ import {
   type ProductCategory,
   useNutritionStore,
 } from "@/entities/nutrition";
+import { Modal, useModal } from "@/shared/ui/modal";
 
 const ALL_CATEGORIES = "all";
 const ALL_SOURCES = "all";
@@ -21,12 +22,12 @@ export const AddDiaryEntryForm = observer(() => {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [servings, setServings] = useState("1");
   const [mealType, setMealType] = useState<MealType>("Завтрак");
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
     ProductCategory | typeof ALL_CATEGORIES
   >(ALL_CATEGORIES);
   const [sourceFilter, setSourceFilter] = useState(ALL_SOURCES);
+  const productPickerModal = useModal();
 
   const products = nutritionStore.products;
   const productsSignature = products.map((product) => product.id).join("|");
@@ -48,26 +49,6 @@ export const AddDiaryEntryForm = observer(() => {
       return firstProductId;
     });
   }, [productsSignature]);
-
-  useEffect(() => {
-    if (!isPickerOpen) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsPickerOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [isPickerOpen]);
 
   const selectedProduct = products.find(
     (product) => product.id === selectedProductId
@@ -101,7 +82,7 @@ export const AddDiaryEntryForm = observer(() => {
 
   const selectProduct = (productId: string) => {
     setSelectedProductId(productId);
-    setIsPickerOpen(false);
+    productPickerModal.close();
   };
 
   return (
@@ -131,7 +112,7 @@ export const AddDiaryEntryForm = observer(() => {
 
           <button
             type="button"
-            onClick={() => setIsPickerOpen(true)}
+            onClick={productPickerModal.open}
             disabled={products.length === 0}
             className="flex w-full items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-left transition hover:border-emerald-300 hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
           >
@@ -292,19 +273,12 @@ export const AddDiaryEntryForm = observer(() => {
         </button>
       </form>
 
-      {isPickerOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end bg-zinc-950/50 p-3 backdrop-blur-sm sm:items-center sm:p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="product-picker-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setIsPickerOpen(false);
-            }
-          }}
-        >
-          <div className="mx-auto flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+      <Modal
+        isOpen={productPickerModal.isOpen}
+        labelledBy="product-picker-title"
+        maxWidthClassName="max-w-3xl"
+        onClose={productPickerModal.close}
+      >
             <div className="border-b border-zinc-100 p-4 sm:p-5">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
@@ -316,7 +290,7 @@ export const AddDiaryEntryForm = observer(() => {
 
                 <button
                   type="button"
-                  onClick={() => setIsPickerOpen(false)}
+                  onClick={productPickerModal.close}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xl font-semibold text-zinc-600 transition hover:bg-zinc-900 hover:text-white"
                   aria-label="Закрыть"
                 >
@@ -439,9 +413,7 @@ export const AddDiaryEntryForm = observer(() => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      ) : null}
+      </Modal>
     </div>
   );
 });
