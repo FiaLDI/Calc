@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
+import { AddProductForm } from "@/features/add-product";
 import {
   MEAL_TYPES,
   PRODUCT_CATEGORIES,
@@ -20,13 +21,14 @@ const ALL_SOURCES = "all";
 export const AddDiaryEntryForm = observer(() => {
   const nutritionStore = useNutritionStore();
   const [selectedProductId, setSelectedProductId] = useState("");
-  const [servings, setServings] = useState("1");
+  const [amountValue, setAmountValue] = useState("100");
   const [mealType, setMealType] = useState<MealType>("Завтрак");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
     ProductCategory | typeof ALL_CATEGORIES
   >(ALL_CATEGORIES);
   const [sourceFilter, setSourceFilter] = useState(ALL_SOURCES);
+  const addProductModal = useModal();
   const productPickerModal = useModal();
 
   const products = nutritionStore.products;
@@ -53,6 +55,13 @@ export const AddDiaryEntryForm = observer(() => {
   const selectedProduct = products.find(
     (product) => product.id === selectedProductId
   );
+  const selectedProductAmountValue = selectedProduct?.amountValue;
+
+  useEffect(() => {
+    if (selectedProductAmountValue !== undefined) {
+      setAmountValue(String(selectedProductAmountValue));
+    }
+  }, [selectedProductAmountValue, selectedProductId]);
   const sourceFilters = useMemo(
     () =>
       Array.from(
@@ -78,7 +87,13 @@ export const AddDiaryEntryForm = observer(() => {
     });
   }, [categoryFilter, products, search, sourceFilter]);
 
-  const parsedServings = Math.max(0.1, Number(servings) || 1);
+  const parsedAmountValue = Math.max(
+    0.1,
+    Number(amountValue) || selectedProduct?.amountValue || 1
+  );
+  const amountMultiplier = selectedProduct
+    ? parsedAmountValue / selectedProduct.amountValue
+    : 1;
 
   const selectProduct = (productId: string) => {
     setSelectedProductId(productId);
@@ -101,8 +116,7 @@ export const AddDiaryEntryForm = observer(() => {
             return;
           }
 
-          nutritionStore.addEntry(selectedProductId, parsedServings, mealType);
-          setServings("1");
+          nutritionStore.addEntry(selectedProductId, amountMultiplier, mealType);
         }}
       >
         <div>
@@ -113,8 +127,7 @@ export const AddDiaryEntryForm = observer(() => {
           <button
             type="button"
             onClick={productPickerModal.open}
-            disabled={products.length === 0}
-            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-left transition hover:border-emerald-300 hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
+            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-left transition hover:border-emerald-300 hover:bg-white"
           >
             {selectedProduct ? (
               <span className="flex min-w-0 items-center gap-3">
@@ -143,7 +156,7 @@ export const AddDiaryEntryForm = observer(() => {
               </span>
             ) : (
               <span className="py-3 text-sm text-zinc-500">
-                Каталог загружается
+                Открыть каталог или добавить продукт
               </span>
             )}
 
@@ -156,18 +169,23 @@ export const AddDiaryEntryForm = observer(() => {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-sm font-medium text-zinc-600">
-              Порций
+              Количество
             </label>
 
-            <input
-              type="number"
-              min={0.1}
-              step="0.1"
-              value={servings}
-              onChange={(event) => setServings(event.target.value)}
-              placeholder="1"
-              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
-            />
+            <div className="grid grid-cols-[minmax(0,1fr)_56px] gap-2">
+              <input
+                type="number"
+                min={0.1}
+                step="0.1"
+                value={amountValue}
+                onChange={(event) => setAmountValue(event.target.value)}
+                placeholder="100"
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
+              />
+              <div className="flex items-center justify-center rounded-2xl bg-zinc-100 text-sm font-semibold text-zinc-600">
+                {selectedProduct?.amountUnit || "г"}
+              </div>
+            </div>
           </div>
 
           <div>
@@ -223,7 +241,7 @@ export const AddDiaryEntryForm = observer(() => {
                     </div>
 
                     <p className="text-sm text-zinc-500">
-                      {parsedServings} x {selectedProduct.amountValue}{" "}
+                      {parsedAmountValue}{" "}
                       {selectedProduct.amountUnit} · {mealType}
                     </p>
                   </div>
@@ -231,7 +249,7 @@ export const AddDiaryEntryForm = observer(() => {
 
                 <div className="text-right">
                   <p className="font-bold text-zinc-900">
-                    {Math.round(selectedProduct.calories * parsedServings)}
+                    {Math.round(selectedProduct.calories * amountMultiplier)}
                   </p>
                   <p className="text-xs text-zinc-500">ккал</p>
                 </div>
@@ -240,19 +258,19 @@ export const AddDiaryEntryForm = observer(() => {
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 <span className="rounded-full bg-emerald-100 px-2.5 py-1 font-medium text-emerald-700">
                   Б{" "}
-                  {Math.round(selectedProduct.protein * parsedServings * 10) /
+                  {Math.round(selectedProduct.protein * amountMultiplier * 10) /
                     10}
                   г
                 </span>
 
                 <span className="rounded-full bg-orange-100 px-2.5 py-1 font-medium text-orange-700">
                   У{" "}
-                  {Math.round(selectedProduct.carbs * parsedServings * 10) / 10}
+                  {Math.round(selectedProduct.carbs * amountMultiplier * 10) / 10}
                   г
                 </span>
 
                 <span className="rounded-full bg-rose-100 px-2.5 py-1 font-medium text-rose-700">
-                  Ж {Math.round(selectedProduct.fat * parsedServings * 10) / 10}г
+                  Ж {Math.round(selectedProduct.fat * amountMultiplier * 10) / 10}г
                 </span>
               </div>
             </>
@@ -279,24 +297,38 @@ export const AddDiaryEntryForm = observer(() => {
         maxWidthClassName="max-w-3xl"
         onClose={productPickerModal.close}
       >
-            <div className="border-b border-zinc-100 p-4 sm:p-5">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm text-zinc-400">Каталог продуктов</p>
-                  <h3 id="product-picker-title" className="text-2xl font-bold">
-                    Выбрать продукт
-                  </h3>
-                </div>
+        <div className="border-b border-zinc-100 p-4 sm:p-5">
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-zinc-400">Каталог продуктов</p>
+              <h3 id="product-picker-title" className="text-2xl font-bold">
+                Выбрать продукт
+              </h3>
+              <p className="mt-1 text-xs text-zinc-400">
+                Серверные продукты приходят из нескольких баз, а вручную
+                добавленные остаются только твоими.
+              </p>
+            </div>
 
-                <button
-                  type="button"
-                  onClick={productPickerModal.close}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xl font-semibold text-zinc-600 transition hover:bg-zinc-900 hover:text-white"
-                  aria-label="Закрыть"
-                >
-                  ×
-                </button>
-              </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={addProductModal.open}
+                className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-zinc-800"
+              >
+                Добавить продукт
+              </button>
+
+              <button
+                type="button"
+                onClick={productPickerModal.close}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xl font-semibold text-zinc-600 transition hover:bg-zinc-900 hover:text-white"
+                aria-label="Закрыть"
+              >
+                ×
+              </button>
+            </div>
+          </div>
 
               <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_180px_180px]">
                 <input
@@ -340,7 +372,7 @@ export const AddDiaryEntryForm = observer(() => {
                   ))}
                 </select>
               </div>
-            </div>
+        </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
               {filteredProducts.length > 0 ? (
@@ -349,61 +381,83 @@ export const AddDiaryEntryForm = observer(() => {
                     const isSelected = product.id === selectedProductId;
 
                     return (
-                      <button
+                      <div
                         key={product.id}
-                        type="button"
-                        onClick={() => selectProduct(product.id)}
-                        className={`flex min-h-[112px] items-start gap-3 rounded-3xl border p-3 text-left transition ${
+                        className={`rounded-3xl border p-3 transition ${
                           isSelected
                             ? "border-emerald-300 bg-emerald-50 shadow-md"
                             : "border-zinc-100 bg-zinc-50 hover:border-emerald-200 hover:bg-white hover:shadow-md"
                         }`}
                       >
-                        {product.imageUrl ? (
-                          <Image
-                            src={product.imageUrl}
-                            alt={product.imageAlt}
-                            width={80}
-                            height={80}
-                            className="h-20 w-20 shrink-0 rounded-2xl object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-bold text-emerald-700">
-                            {product.name.slice(0, 1).toUpperCase()}
-                          </span>
-                        )}
-
-                        <span className="min-w-0 flex-1">
-                          <span className="mb-1 flex flex-wrap items-center gap-2">
-                            <span className="font-semibold text-zinc-900">
-                              {product.name}
+                        <button
+                          type="button"
+                          onClick={() => selectProduct(product.id)}
+                          className="flex w-full min-h-[88px] items-start gap-3 text-left"
+                        >
+                          {product.imageUrl ? (
+                            <Image
+                              src={product.imageUrl}
+                              alt={product.imageAlt}
+                              width={80}
+                              height={80}
+                              className="h-20 w-20 shrink-0 rounded-2xl object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-bold text-emerald-700">
+                              {product.name.slice(0, 1).toUpperCase()}
                             </span>
-                            {isSelected ? (
-                              <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-semibold text-white">
-                                Выбран
+                          )}
+
+                          <span className="min-w-0 flex-1">
+                            <span className="mb-1 flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-zinc-900">
+                                {product.name}
                               </span>
-                            ) : null}
-                          </span>
+                              {isSelected ? (
+                                <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+                                  Выбран
+                                </span>
+                              ) : null}
+                            </span>
 
-                          <span className="block text-xs text-zinc-500">
-                            {product.category} · {product.sourceLabel}
+                            <span className="block text-xs text-zinc-500">
+                              {product.category} · {product.sourceLabel}
+                            </span>
+                            <span className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                              <span className="rounded-full bg-white px-2 py-1 font-medium text-zinc-700">
+                                {product.calories} ккал
+                              </span>
+                              <span className="rounded-full bg-emerald-100 px-2 py-1 font-medium text-emerald-700">
+                                Б {product.protein}г
+                              </span>
+                              <span className="rounded-full bg-orange-100 px-2 py-1 font-medium text-orange-700">
+                                У {product.carbs}г
+                              </span>
+                              <span className="rounded-full bg-rose-100 px-2 py-1 font-medium text-rose-700">
+                                Ж {product.fat}г
+                              </span>
+                            </span>
                           </span>
-                          <span className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-                            <span className="rounded-full bg-white px-2 py-1 font-medium text-zinc-700">
-                              {product.calories} ккал
-                            </span>
-                            <span className="rounded-full bg-emerald-100 px-2 py-1 font-medium text-emerald-700">
-                              Б {product.protein}г
-                            </span>
-                            <span className="rounded-full bg-orange-100 px-2 py-1 font-medium text-orange-700">
-                              У {product.carbs}г
-                            </span>
-                            <span className="rounded-full bg-rose-100 px-2 py-1 font-medium text-rose-700">
-                              Ж {product.fat}г
-                            </span>
-                          </span>
-                        </span>
-                      </button>
+                        </button>
+
+                        {!product.isReadonly ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const shouldRemove = window.confirm(
+                                "Удалить продукт из личной базы? История в дневнике сохранится."
+                              );
+
+                              if (shouldRemove) {
+                                nutritionStore.removeProduct(product.id);
+                              }
+                            }}
+                            className="mt-3 rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
+                          >
+                            Удалить
+                          </button>
+                        ) : null}
+                      </div>
                     );
                   })}
                 </div>
@@ -413,6 +467,43 @@ export const AddDiaryEntryForm = observer(() => {
                 </div>
               )}
             </div>
+      </Modal>
+
+      <Modal
+        isOpen={addProductModal.isOpen}
+        labelledBy="add-product-from-picker-title"
+        onClose={addProductModal.close}
+      >
+        <div className="border-b border-zinc-100 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-zinc-400">Новый продукт</p>
+              <h3
+                id="add-product-from-picker-title"
+                className="text-2xl font-bold"
+              >
+                Добавить в базу
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              onClick={addProductModal.close}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xl font-semibold text-zinc-600 transition hover:bg-zinc-900 hover:text-white"
+              aria-label="Закрыть"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+          <AddProductForm
+            framed={false}
+            onCancel={addProductModal.close}
+            onSuccess={addProductModal.close}
+          />
+        </div>
       </Modal>
     </div>
   );

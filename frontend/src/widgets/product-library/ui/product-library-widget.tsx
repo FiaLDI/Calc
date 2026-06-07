@@ -140,7 +140,7 @@ export const ProductLibraryWidget = observer(() => {
       ) : null}
 
       {filteredProducts.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-3 h-50 overflow-auto rounded-2xl border border-zinc-200 p-3">
           {filteredProducts.map((product) => (
             <div
               key={product.id}

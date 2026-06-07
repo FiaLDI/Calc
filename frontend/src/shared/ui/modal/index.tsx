@@ -10,6 +10,8 @@ type ModalProps = PropsWithChildren<{
   onClose: () => void;
 }>;
 
+let scrollLockCount = 0;
+
 export const ModalProvider = ({ children }: PropsWithChildren) => {
   return <>{children}</>;
 };
@@ -53,11 +55,16 @@ export const Modal = ({
     };
 
     document.addEventListener("keydown", handleKeyDown);
+    scrollLockCount += 1;
     document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
+      scrollLockCount = Math.max(0, scrollLockCount - 1);
+
+      if (scrollLockCount === 0) {
+        document.body.style.overflow = "";
+      }
     };
   }, [isOpen, onClose]);
 

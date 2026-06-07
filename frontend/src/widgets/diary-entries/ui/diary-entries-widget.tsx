@@ -18,11 +18,11 @@ export const DiaryEntriesWidget = observer(() => {
   const products = nutritionStore.products;
   const [editingEntryId, setEditingEntryId] = useState("");
   const [editProductId, setEditProductId] = useState("");
-  const [editServings, setEditServings] = useState("1");
+  const [editAmountValue, setEditAmountValue] = useState("100");
   const [editMealType, setEditMealType] = useState<MealType>("Завтрак");
 
   return (
-    <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
+    <div className="flex h-full min-h-0 w-full flex-col rounded-4xl bg-white p-6 shadow-xl">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <p className="text-sm text-zinc-400">Дневник питания</p>
@@ -40,12 +40,12 @@ export const DiaryEntriesWidget = observer(() => {
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
+        <div className="min-h-0 flex-1 rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
           Пока нет записей за этот день. Добавь прием пищи слева, и статистика
           обновится автоматически.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="min-h-0 flex-1 space-y-3 overflow-auto pr-1">
           {entries.map((entry) => {
             const isEditing = editingEntryId === entry.id;
 
@@ -64,10 +64,17 @@ export const DiaryEntriesWidget = observer(() => {
                         return;
                       }
 
+                      const editProduct = products.find(
+                        (product) => product.id === editProductId
+                      );
+                      const editMultiplier = editProduct
+                        ? Number(editAmountValue) / editProduct.amountValue
+                        : Number(editAmountValue);
+
                       nutritionStore.updateEntry(
                         entry.id,
                         editProductId,
-                        Number(editServings),
+                        editMultiplier,
                         editMealType
                       );
                       setEditingEntryId("");
@@ -80,9 +87,20 @@ export const DiaryEntriesWidget = observer(() => {
                         </label>
                         <select
                           value={editProductId}
-                          onChange={(event) =>
-                            setEditProductId(event.target.value)
-                          }
+                          onChange={(event) => {
+                            const nextProductId = event.target.value;
+                            const nextProduct = products.find(
+                              (product) => product.id === nextProductId
+                            );
+
+                            setEditProductId(nextProductId);
+
+                            if (nextProduct) {
+                              setEditAmountValue(
+                                String(nextProduct.amountValue)
+                              );
+                            }
+                          }}
                           className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-400"
                         >
                           {products.map((product) => (
@@ -95,18 +113,24 @@ export const DiaryEntriesWidget = observer(() => {
 
                       <div>
                         <label className="mb-1 block text-xs font-medium text-zinc-500">
-                          Порций
+                          Количество
                         </label>
-                        <input
-                          type="number"
-                          min={0.1}
-                          step="0.1"
-                          value={editServings}
-                          onChange={(event) =>
-                            setEditServings(event.target.value)
-                          }
-                          className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-400"
-                        />
+                        <div className="grid grid-cols-[minmax(0,1fr)_44px] gap-2">
+                          <input
+                            type="number"
+                            min={0.1}
+                            step="0.1"
+                            value={editAmountValue}
+                            onChange={(event) =>
+                              setEditAmountValue(event.target.value)
+                            }
+                            className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-400"
+                          />
+                          <div className="flex items-center justify-center rounded-2xl bg-zinc-100 text-xs font-semibold text-zinc-600">
+                            {products.find((product) => product.id === editProductId)
+                              ?.amountUnit || entry.amountUnit}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -172,7 +196,8 @@ export const DiaryEntriesWidget = observer(() => {
                             {entry.productName}
                           </h3>
                           <p className="text-xs text-zinc-500">
-                            {entry.servings} x {entry.amountValue}{" "}
+                            {Math.round(entry.amountValue * entry.servings * 10) /
+                              10}{" "}
                             {entry.amountUnit}
                           </p>
                         </div>
@@ -196,7 +221,13 @@ export const DiaryEntriesWidget = observer(() => {
                                 ? entry.productId
                                 : products[0]?.id || ""
                             );
-                            setEditServings(String(entry.servings));
+                            setEditAmountValue(
+                              String(
+                                Math.round(
+                                  entry.amountValue * entry.servings * 10
+                                ) / 10
+                              )
+                            );
                             setEditMealType(entry.mealType);
                           }}
                           className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-300"

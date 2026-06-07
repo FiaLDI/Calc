@@ -25,7 +25,7 @@ export const DayCalendarWidget = observer(() => {
           <p className="text-sm text-zinc-400">
             {isTodaySelected
               ? "Сегодня выбрано"
-              : "Выбран прошлый день, можно быстро вернуться назад"}
+              : "Прошлый день"}
           </p>
         </div>
 
@@ -55,15 +55,7 @@ export const DayCalendarWidget = observer(() => {
         </div>
       </div>
 
-      {!isTodaySelected ? (
-        <button
-          type="button"
-          onClick={nutritionStore.selectToday}
-          className="mb-4 w-full rounded-3xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
-        >
-          Вернуться к текущему дню
-        </button>
-      ) : null}
+      
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {nutritionStore.calendarDays.map((day) => {
@@ -91,6 +83,15 @@ export const DayCalendarWidget = observer(() => {
             </button>
           );
         })}
+        {!isTodaySelected ? (
+        <button
+          type="button"
+          onClick={nutritionStore.selectToday}
+          className="h-full w-full rounded-3xl col-span-2 bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
+        >
+          Вернуться к сегодня
+        </button>
+      ) : null}
       </div>
     </div>
   );
