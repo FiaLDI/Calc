@@ -1,5 +1,4 @@
-
-import { NutritionGoal } from "@/entities/settings/model/types";
+import type { NutritionGoal } from "@/entities/settings";
 
 export type TargetFormState = {
   calories: string;

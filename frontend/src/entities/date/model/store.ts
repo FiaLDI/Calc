@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable } from "mobx";
 
 import {
   addDays,
@@ -8,9 +8,9 @@ import {
   isValidDateKey,
   parseDateKey,
 } from "@/shared/lib/format";
-import {
-  STORAGE_KEY,
-} from "./constants";
+
+import { STORAGE_KEY } from "./constants";
+import type { CalendarDay, WeeklyDay } from "./types";
 
 type StoreSnapshot = {
   selectedDate: string;
@@ -20,8 +20,6 @@ class DateStore {
   selectedDate: string;
   todayDateKey: string;
   isHydrated = false;
-  isRemoteProductsLoading = false;
-  remoteProductsError = "";
 
   constructor(initialDateKey = formatDateKey(new Date())) {
     this.selectedDate = initialDateKey;
@@ -43,11 +41,10 @@ class DateStore {
       }
 
       const parsedState = JSON.parse(rawState) as Partial<StoreSnapshot>;
-   
+
       this.selectedDate = isValidDateKey(parsedState.selectedDate)
         ? parsedState.selectedDate
         : this.selectedDate;
-    
     } catch {
       this.todayDateKey = formatDateKey(new Date());
       this.selectedDate = this.todayDateKey;
@@ -120,7 +117,7 @@ class DateStore {
     );
   }
 
-  get calendarDays() {
+  get calendarDays(): CalendarDay[] {
     const selectedDate = parseDateKey(this.selectedDate);
     const today = parseDateKey(this.todayDateKey);
     const suggestedEndDate = addDays(selectedDate, 3);
@@ -138,7 +135,7 @@ class DateStore {
     });
   }
 
-  get weeklyDays() {
+  get weeklyDays(): WeeklyDay[] {
     return this.calendarDays.map(({ dateKey, shortLabel }) => ({
       dateKey,
       day: shortLabel,

@@ -5,16 +5,18 @@ import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
-import { formatLongDay } from "@/shared/lib/format";
-import { useProductsStore } from "@/entities/products";
 import { useDateStore } from "@/entities/date";
-import { MEAL_TYPES, MealType } from "@/entities/date/model/types";
+import { MEAL_TYPES, type MealType, useProductsStore } from "@/entities/products";
+import { formatLongDay } from "@/shared/lib/format";
 
 export const DiaryEntriesWidget = observer(() => {
   const productsStore = useProductsStore();
   const dateStore = useDateStore();
   const entries = productsStore.selectedEntries(dateStore.selectedDate);
   const products = productsStore.products;
+  const selectedDayTotals = productsStore.selectedDayTotals(
+    dateStore.selectedDate
+  );
   const [editingEntryId, setEditingEntryId] = useState("");
   const [editProductId, setEditProductId] = useState("");
   const [editAmountValue, setEditAmountValue] = useState("100");
@@ -32,9 +34,7 @@ export const DiaryEntriesWidget = observer(() => {
 
         <div className="rounded-2xl bg-zinc-100 px-4 py-2 text-right">
           <p className="text-xs text-zinc-400">Всего</p>
-          <p className="font-bold">
-            {productsStore.selectedDayTotals(dateStore.selectedDate).calories} ккал
-          </p>
+          <p className="font-bold">{selectedDayTotals.calories} ккал</p>
         </div>
       </div>
 
@@ -126,8 +126,9 @@ export const DiaryEntriesWidget = observer(() => {
                             className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-400"
                           />
                           <div className="flex items-center justify-center rounded-2xl bg-zinc-100 text-xs font-semibold text-zinc-600">
-                            {products.find((product) => product.id === editProductId)
-                              ?.amountUnit || entry.amountUnit}
+                            {products.find(
+                              (product) => product.id === editProductId
+                            )?.amountUnit || entry.amountUnit}
                           </div>
                         </div>
                       </div>

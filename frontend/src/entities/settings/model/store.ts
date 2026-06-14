@@ -1,16 +1,18 @@
-import { makeAutoObservable, runInAction } from "mobx";
-import { 
-    DEFAULT_NUTRITION_GOAL,
-    DEFAULT_TARGET_CALORIES, 
-    DEFAULT_TARGET_CARBS, 
-    DEFAULT_TARGET_FAT, 
-    DEFAULT_TARGET_PROTEIN, 
-    DEFAULT_TARGET_WEIGHT_KG, 
-    NUTRITION_GOAL_SETTINGS, 
-    STORAGE_KEY
-} from "./constants";
+import { makeAutoObservable } from "mobx";
+
 import { normalizePositive } from "@/shared/lib/format";
-import { NUTRITION_GOALS, NutritionGoal } from "./types";
+
+import { calculateNutritionTargets } from "../lib/calculate-nutrition-targets";
+import {
+  DEFAULT_NUTRITION_GOAL,
+  DEFAULT_TARGET_CALORIES,
+  DEFAULT_TARGET_CARBS,
+  DEFAULT_TARGET_FAT,
+  DEFAULT_TARGET_PROTEIN,
+  DEFAULT_TARGET_WEIGHT_KG,
+  STORAGE_KEY,
+} from "./constants";
+import { NUTRITION_GOALS, type NutritionGoal } from "./types";
 
 type StoreSnapshot = {
   nutritionGoal: NutritionGoal;
@@ -32,7 +34,7 @@ class SettingsStore {
   targetFat = DEFAULT_TARGET_FAT;
   targetWeightKg = DEFAULT_TARGET_WEIGHT_KG;
   nutritionGoal = DEFAULT_NUTRITION_GOAL;
-  isHydrated = false;;
+  isHydrated = false;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -75,7 +77,6 @@ class SettingsStore {
       this.nutritionGoal = isNutritionGoal(parsedState.nutritionGoal)
         ? parsedState.nutritionGoal
         : DEFAULT_NUTRITION_GOAL;
-
     } catch {
       this.targetCalories = DEFAULT_TARGET_CALORIES;
       this.targetProtein = DEFAULT_TARGET_PROTEIN;
@@ -94,7 +95,7 @@ class SettingsStore {
     }
 
     const snapshot: StoreSnapshot = {
-      nutritionGoal: this.nutritionGoal as NutritionGoal,
+      nutritionGoal: this.nutritionGoal,
       targetCarbs: this.targetCarbs,
       targetCalories: this.targetCalories,
       targetFat: this.targetFat,
@@ -141,22 +142,7 @@ class SettingsStore {
   }
 
   calculateNutritionTargets(weightKg: number, goal: NutritionGoal) {
-    const normalizedWeight = normalizePositive(weightKg, DEFAULT_TARGET_WEIGHT_KG);
-    const settings = NUTRITION_GOAL_SETTINGS[goal];
-    const calories = Math.round(normalizedWeight * settings.caloriesPerKg);
-    const protein = Math.round(normalizedWeight * settings.proteinPerKg);
-    const fat = Math.round(normalizedWeight * settings.fatPerKg);
-    const carbs = Math.max(
-      1,
-      Math.round((calories - protein * 4 - fat * 9) / 4)
-    );
-
-    return {
-      calories,
-      protein,
-      carbs,
-      fat,
-    };
+    return calculateNutritionTargets(weightKg, goal);
   }
 
   get macroTargets() {
@@ -168,5 +154,4 @@ class SettingsStore {
   }
 }
 
-export const createSettingsStore = () =>
-  new SettingsStore();
+export const createSettingsStore = () => new SettingsStore();

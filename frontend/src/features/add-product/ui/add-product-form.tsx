@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 
-import { useProductsStore } from "@/entities/products";
-import { PRODUCT_CATEGORIES, PRODUCT_UNITS, ProductCategory, ProductUnit } from "@/entities/products/model/types";
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_UNITS,
+  type ProductCategory,
+  type ProductUnit,
+  useProductsStore,
+} from "@/entities/products";
 
 type ProductFormState = {
   amountUnit: ProductUnit;

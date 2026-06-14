@@ -13,6 +13,37 @@ export type ProductUnit = (typeof PRODUCT_UNITS)[number];
 export type MealType = (typeof MEAL_TYPES)[number];
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
+export type NutritionTotals = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+export type MacroTargets = Pick<NutritionTotals, "protein" | "carbs" | "fat">;
+
+export type MacroProgressItem = {
+  title: string;
+  consumed: number;
+  target: number;
+  percentage: number;
+  colorClass: string;
+};
+
+export type WeeklyDay = {
+  dateKey: string;
+  day: string;
+};
+
+export type WeeklyCaloriesPoint = {
+  day: string;
+  calories: number;
+};
+
+export type WeeklyKbjuPoint = NutritionTotals & {
+  day: string;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -37,7 +68,7 @@ export type DiaryEntry = {
   productName: string;
   productImageAlt: string;
   productImageUrl: string;
-  amountValue: number;
+  amountValue: Product["amountValue"];
   amountUnit: ProductUnit;
   servings: number;
   mealType: MealType;

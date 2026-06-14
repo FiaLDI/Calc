@@ -2,7 +2,6 @@
 
 import {
   createContext,
-  ReactNode,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -12,14 +11,11 @@ import {
 
 import { createProductsStore } from "./store";
 
-type ProductsStoreInstance = ReturnType<typeof createProductsStore>;
+export type ProductsStoreInstance = ReturnType<typeof createProductsStore>;
 
 const ProductsStoreContext = createContext<ProductsStoreInstance | null>(null);
 
-
-export const ProductStoreProvider = ({
-  children,
-}: {children: ReactNode}) => {
+export const ProductStoreProvider = ({ children }: PropsWithChildren) => {
   const [store] = useState(() => createProductsStore());
 
   useLayoutEffect(() => {

@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-import { observer } from "mobx-react-lite";
 import { useDateStore } from "@/entities/date";
-
+import { observer } from "mobx-react-lite";
 
 export const DayCalendarWidget = observer(() => {
   const dateStore = useDateStore();
   const [isMounted, setIsMounted] = useState(false);
-  const isTodaySelected =
-    dateStore.selectedDate === dateStore.todayDateKey;
+  const isTodaySelected = dateStore.selectedDate === dateStore.todayDateKey;
   const canSelectNextDay = isMounted && dateStore.canSelectNextDay;
 
   useEffect(() => {
@@ -23,9 +21,7 @@ export const DayCalendarWidget = observer(() => {
         <div>
           <h2 className="text-xl font-bold">Выберите день</h2>
           <p className="text-sm text-zinc-400">
-            {isTodaySelected
-              ? "Сегодня выбрано"
-              : "Прошлый день"}
+            {isTodaySelected ? "Сегодня выбрано" : "Прошлый день"}
           </p>
         </div>
 
@@ -82,14 +78,14 @@ export const DayCalendarWidget = observer(() => {
           );
         })}
         {!isTodaySelected ? (
-        <button
-          type="button"
-          onClick={dateStore.selectToday}
-          className="h-full w-full rounded-3xl col-span-2 bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
-        >
-          Вернуться к сегодня
-        </button>
-      ) : null}
+          <button
+            type="button"
+            onClick={dateStore.selectToday}
+            className="col-span-2 h-full w-full rounded-3xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
+          >
+            Вернуться к сегодня
+          </button>
+        ) : null}
       </div>
     </div>
   );

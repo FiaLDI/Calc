@@ -2,21 +2,19 @@
 
 import {
   createContext,
-  ReactNode,
   useContext,
   useLayoutEffect,
   useState,
+  type PropsWithChildren,
 } from "react";
 
 import { createSettingsStore } from "./store";
 
-type SettingsStoreInstance = ReturnType<typeof createSettingsStore>;
+export type SettingsStoreInstance = ReturnType<typeof createSettingsStore>;
 
 const SettingsStoreContext = createContext<SettingsStoreInstance | null>(null);
 
-export const SettingsStoreProvider = ({
-  children
-}: {children: ReactNode}) => {
+export const SettingsStoreProvider = ({ children }: PropsWithChildren) => {
   const [store] = useState(() => createSettingsStore());
 
   useLayoutEffect(() => {

@@ -2,25 +2,28 @@
 
 import { observer } from "mobx-react-lite";
 
-import { useSettingsStore } from "@/entities/settings";
 import { useDateStore } from "@/entities/date";
 import { useProductsStore } from "@/entities/products";
+import { useSettingsStore } from "@/entities/settings";
 import { SetSettingsModal } from "@/features/set-settings";
-import { NutritionGoal } from "@/entities/settings/model/types";
-
 
 export const CalorieSummaryWidget = observer(() => {
   const settingsStore = useSettingsStore();
   const productsStore = useProductsStore();
   const dateStore = useDateStore();
-
+  const selectedDayTotals = productsStore.selectedDayTotals(
+    dateStore.selectedDate
+  );
+  const macroProgress = productsStore.macroProgress(
+    settingsStore.macroTargets,
+    dateStore.selectedDate
+  );
   const caloriesPercent = Math.round(
-    (productsStore.selectedDayTotals(dateStore.selectedDate).calories / settingsStore.targetCalories) *
-      100
+    (selectedDayTotals.calories / settingsStore.targetCalories) * 100
   );
   const targetSummary = [
     {
-      label: settingsStore.nutritionGoal as NutritionGoal,
+      label: settingsStore.nutritionGoal,
       value: `${settingsStore.targetWeightKg}кг`,
       className: "bg-zinc-100 text-zinc-700",
     },
@@ -49,7 +52,7 @@ export const CalorieSummaryWidget = observer(() => {
 
           <div className="mt-1 flex flex-wrap items-end gap-2">
             <h2 className="text-3xl font-bold">
-              {productsStore.selectedDayTotals(dateStore.selectedDate).calories}
+              {selectedDayTotals.calories}
             </h2>
             <span className="pb-1 text-sm text-zinc-400">
               / {settingsStore.targetCalories} ккал
@@ -75,12 +78,12 @@ export const CalorieSummaryWidget = observer(() => {
             </span>
           </div>
 
-           <SetSettingsModal settingsStore={settingsStore} />
+          <SetSettingsModal settingsStore={settingsStore} />
         </div>
       </div>
 
       <div className="space-y-4">
-        {productsStore.macroProgress(settingsStore.macroTargets, dateStore.selectedDate).map((item) => (
+        {macroProgress.map((item) => (
           <div key={item.title}>
             <div className="mb-1 flex justify-between text-sm">
               <span className="font-medium">{item.title}</span>

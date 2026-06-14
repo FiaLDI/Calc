@@ -10,13 +10,14 @@ import {
   YAxis,
 } from "recharts";
 
-import { useElementSize } from "@/shared/lib/use-element-size";
-import { useProductsStore } from "@/entities/products";
 import { useDateStore } from "@/entities/date";
+import { useProductsStore, type WeeklyKbjuPoint } from "@/entities/products";
+import { useElementSize } from "@/shared/lib/use-element-size";
 
 export const WeeklyKbjuWidget = observer(() => {
   const productsStore = useProductsStore();
   const dateStore = useDateStore();
+  const weeklyKbju = productsStore.weeklyKbju(dateStore.weeklyDays);
   const { hasSize, height, ref, width } = useElementSize<HTMLDivElement>();
 
   return (
@@ -50,7 +51,7 @@ export const WeeklyKbjuWidget = observer(() => {
           <BarChart
             width={width}
             height={height}
-            data={productsStore.weeklyKbju(dateStore.weeklyDays)}
+            data={weeklyKbju}
             barGap={4}
             barCategoryGap={18}
           >
@@ -79,11 +80,11 @@ export const WeeklyKbjuWidget = observer(() => {
                   carbs: "Углеводы",
                 };
 
-                return [`${value} г`, labels[name as string]];
+                return [`${value} г`, labels[String(name)]];
               }}
               labelFormatter={(day) => {
-                const currentDay = productsStore.weeklyKbju((dateStore.weeklyDays)).find(
-                  (item : any) => item.day === day
+                const currentDay = weeklyKbju.find(
+                  (item: WeeklyKbjuPoint) => item.day === day
                 );
 
                 return `${day} · ${currentDay?.calories ?? 0} ккал`;

@@ -1,44 +1,44 @@
 "use client";
 
-import { useState } from "react";
-
 import { observer } from "mobx-react-lite";
-import Image from "next/image";
 
+import {
+  ProductCard,
+  type ProductCategoryFilter,
+  useProductFilters,
+  useProductsStore,
+} from "@/entities/products";
 import { AddProductForm } from "@/features/add-product";
 import { Modal, useModal } from "@/shared/ui/modal";
-import { useProductsStore } from "@/entities/products";
-import { PRODUCT_CATEGORIES, ProductCategory } from "@/entities/products/model/types";
-
-const ALL_CATEGORIES = "all";
-const ALL_SOURCES = "all";
 
 export const ProductLibraryWidget = observer(() => {
   const productsStore = useProductsStore();
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<
-    ProductCategory | typeof ALL_CATEGORIES
-  >(ALL_CATEGORIES);
-  const [sourceFilter, setSourceFilter] = useState(ALL_SOURCES);
   const addProductModal = useModal();
-
   const products = productsStore.products;
   const hasProducts = products.length > 0;
-  const normalizedSearch = search.trim().toLocaleLowerCase();
-  const sourceFilters = Array.from(
-    new Map(products.map((product) => [product.sourceKey, product.sourceLabel]))
-  );
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      !normalizedSearch ||
-      product.name.toLocaleLowerCase().includes(normalizedSearch);
-    const matchesCategory =
-      categoryFilter === ALL_CATEGORIES || product.category === categoryFilter;
-    const matchesSource =
-      sourceFilter === ALL_SOURCES || product.sourceKey === sourceFilter;
+  const {
+    allCategoriesValue,
+    allSourcesValue,
+    categories,
+    categoryFilter,
+    filteredProducts,
+    search,
+    setCategoryFilter,
+    setSearch,
+    setSourceFilter,
+    sourceFilter,
+    sourceFilters,
+  } = useProductFilters(products);
 
-    return matchesSearch && matchesCategory && matchesSource;
-  });
+  const removeCustomProduct = (productId: string) => {
+    const shouldRemove = window.confirm(
+      "Удалить продукт из личной базы? История в дневнике сохранится."
+    );
+
+    if (shouldRemove) {
+      productsStore.removeProduct(productId);
+    }
+  };
 
   return (
     <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
@@ -81,14 +81,12 @@ export const ProductLibraryWidget = observer(() => {
             <select
               value={categoryFilter}
               onChange={(event) =>
-                setCategoryFilter(
-                  event.target.value as ProductCategory | typeof ALL_CATEGORIES
-                )
+                setCategoryFilter(event.target.value as ProductCategoryFilter)
               }
               className="min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
             >
-              <option value={ALL_CATEGORIES}>Все категории</option>
-              {PRODUCT_CATEGORIES.map((category) => (
+              <option value={allCategoriesValue}>Все категории</option>
+              {categories.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
@@ -100,7 +98,7 @@ export const ProductLibraryWidget = observer(() => {
               onChange={(event) => setSourceFilter(event.target.value)}
               className="min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
             >
-              <option value={ALL_SOURCES}>Все источники</option>
+              <option value={allSourcesValue}>Все источники</option>
               {sourceFilters.map(([sourceKey, sourceLabel]) => (
                 <option key={sourceKey} value={sourceKey}>
                   {sourceLabel}
@@ -125,8 +123,8 @@ export const ProductLibraryWidget = observer(() => {
 
       {!hasProducts && !productsStore.isRemoteProductsLoading ? (
         <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
-          Каталог пока пуст. Проверь backend или добавь продукт вручную через форму
-          выше.
+          Каталог пока пуст. Проверь backend или добавь продукт вручную через
+          форму выше.
         </div>
       ) : null}
 
@@ -137,89 +135,13 @@ export const ProductLibraryWidget = observer(() => {
       ) : null}
 
       {filteredProducts.length > 0 ? (
-        <div className="space-y-3 h-50 overflow-auto rounded-2xl border border-zinc-200 p-3">
+        <div className="h-50 space-y-3 overflow-auto rounded-2xl border border-zinc-200 p-3">
           {filteredProducts.map((product) => (
-            <div
+            <ProductCard
               key={product.id}
-              className="rounded-3xl border border-zinc-100 bg-zinc-50 p-4 transition hover:bg-white hover:shadow-md"
-            >
-              <div className="mb-3 flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  {product.imageUrl ? (
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.imageAlt}
-                      width={72}
-                      height={72}
-                      className="h-[72px] w-[72px] shrink-0 rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-bold text-emerald-700">
-                      {product.name.slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-
-                  <div className="min-w-0">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold">{product.name}</h3>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                          product.isReadonly
-                            ? "bg-sky-100 text-sky-700"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {product.sourceLabel}
-                      </span>
-                    </div>
-
-                    <p className="text-sm text-zinc-400">
-                      {product.category} · {product.amountValue}{" "}
-                      {product.amountUnit}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex shrink-0 items-start gap-3">
-                  <div className="text-right">
-                    <p className="font-bold">{product.calories}</p>
-                    <p className="text-xs text-zinc-400">ккал</p>
-                  </div>
-
-                  {!product.isReadonly ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const shouldRemove = window.confirm(
-                          "Удалить продукт из личной базы? История в дневнике сохранится."
-                        );
-
-                        if (shouldRemove) {
-                          productsStore.removeProduct(product.id);
-                        }
-                      }}
-                      className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
-                    >
-                      Удалить
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 font-medium text-emerald-700">
-                  Б {product.protein}г
-                </span>
-
-                <span className="rounded-full bg-orange-100 px-2.5 py-1 font-medium text-orange-700">
-                  У {product.carbs}г
-                </span>
-
-                <span className="rounded-full bg-rose-100 px-2.5 py-1 font-medium text-rose-700">
-                  Ж {product.fat}г
-                </span>
-              </div>
-            </div>
+              onRemove={removeCustomProduct}
+              product={product}
+            />
           ))}
         </div>
       ) : null}
