@@ -1,0 +1,44 @@
+[
+  {
+    "warehouseId": "warehouse-oatmeal",
+    "title": "Oatmeal",
+    "category": "Крупы",
+    "imagePath": "/products/oatmeal.png",
+    "imageDescription": "Oatmeal in a bowl",
+    "portionSize": 100,
+    "portionUnit": "г",
+    "kcal": 366,
+    "proteinGrams": 11.9,
+    "carbGrams": 59.5,
+    "fatGrams": 6.9,
+    "insertedAt": "2026-05-10T08:00:00.000Z"
+  },
+  {
+    "warehouseId": "warehouse-buckwheat",
+    "title": "Buckwheat",
+    "category": "Крупы",
+    "imagePath": "/products/buckwheat.png",
+    "imageDescription": "Buckwheat in a bowl",
+    "portionSize": 100,
+    "portionUnit": "г",
+    "kcal": 343,
+    "proteinGrams": 13.3,
+    "carbGrams": 71.5,
+    "fatGrams": 3.4,
+    "insertedAt": "2026-05-10T08:10:00.000Z"
+  },
+  {
+    "warehouseId": "warehouse-cottage-cheese",
+    "title": "Cottage Cheese 5%",
+    "category": "Молочные",
+    "imagePath": "/products/cottage-cheese.png",
+    "imageDescription": "Cottage cheese in a small dish",
+    "portionSize": 100,
+    "portionUnit": "г",
+    "kcal": 121,
+    "proteinGrams": 17.2,
+    "carbGrams": 3,
+    "fatGrams": 5,
+    "insertedAt": "2026-05-10T08:20:00.000Z"
+  }
+]

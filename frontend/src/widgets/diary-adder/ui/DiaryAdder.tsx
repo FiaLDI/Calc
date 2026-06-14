@@ -1,0 +1,51 @@
+"use client";
+
+import { useState } from "react";
+
+import { useDateStore } from "@/entities/date";
+import { useProductsStore } from "@/entities/products";
+import { AddProductEntryForm } from "@/features/add-product-entry";
+import { FindProductForm } from "@/features/find-product";
+import { useModal } from "@/shared/ui/modal";
+import { observer } from "mobx-react-lite";
+
+export const DiaryAdder = observer(() => {
+  const productsStore = useProductsStore();
+  const dateStore = useDateStore();
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const addProductModal = useModal();
+  const productPickerModal = useModal();
+  const products = productsStore.products;
+  const productIds = products.map((product) => product.id);
+  const selectedProductExists =
+    selectedProductId && productIds.includes(selectedProductId);
+  const effectiveSelectedProductId = selectedProductExists
+    ? selectedProductId
+    : productIds[0] || "";
+
+  return (
+    <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
+      <div className="mb-5">
+        <p className="text-sm text-zinc-400">Дневник питания</p>
+        <h2 className="text-2xl font-bold">Добавить прием пищи</h2>
+      </div>
+
+      <AddProductEntryForm
+        dateStore={dateStore}
+        productPickerModal={productPickerModal}
+        products={products}
+        productsStore={productsStore}
+        selectedProductId={effectiveSelectedProductId}
+      />
+
+      <FindProductForm
+        addProductModal={addProductModal}
+        productPickerModal={productPickerModal}
+        products={products}
+        removeProduct={productsStore.removeProduct}
+        selectedProductId={effectiveSelectedProductId}
+        setSelectedProductId={setSelectedProductId}
+      />
+    </div>
+  );
+});

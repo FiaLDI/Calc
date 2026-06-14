@@ -10,15 +10,18 @@ import {
   YAxis,
 } from "recharts";
 
-import { useNutritionStore } from "@/entities/nutrition";
+import { useDateStore } from "@/entities/date";
+import { useProductsStore, type WeeklyKbjuPoint } from "@/entities/products";
 import { useElementSize } from "@/shared/lib/use-element-size";
 
 export const WeeklyKbjuWidget = observer(() => {
-  const nutritionStore = useNutritionStore();
+  const productsStore = useProductsStore();
+  const dateStore = useDateStore();
+  const weeklyKbju = productsStore.weeklyKbju(dateStore.weeklyDays);
   const { hasSize, height, ref, width } = useElementSize<HTMLDivElement>();
 
   return (
-    <div className="min-w-0 w-full rounded-4xl bg-white p-6 shadow-xl">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col rounded-4xl bg-white p-6 shadow-xl">
       <div className="mb-5 flex items-start justify-between">
         <div>
           <p className="text-sm text-zinc-400">Статистика за неделю</p>
@@ -43,12 +46,12 @@ export const WeeklyKbjuWidget = observer(() => {
         </span>
       </div>
 
-      <div ref={ref} className="h-72 min-w-0">
+      <div ref={ref} className="min-h-[180px] min-w-0 flex-1">
         {hasSize ? (
           <BarChart
             width={width}
             height={height}
-            data={nutritionStore.weeklyKbju}
+            data={weeklyKbju}
             barGap={4}
             barCategoryGap={18}
           >
@@ -77,11 +80,11 @@ export const WeeklyKbjuWidget = observer(() => {
                   carbs: "Углеводы",
                 };
 
-                return [`${value} г`, labels[name as string]];
+                return [`${value} г`, labels[String(name)]];
               }}
               labelFormatter={(day) => {
-                const currentDay = nutritionStore.weeklyKbju.find(
-                  (item) => item.day === day
+                const currentDay = weeklyKbju.find(
+                  (item: WeeklyKbjuPoint) => item.day === day
                 );
 
                 return `${day} · ${currentDay?.calories ?? 0} ккал`;

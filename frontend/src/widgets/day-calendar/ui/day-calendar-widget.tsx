@@ -1,13 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
+import { useDateStore } from "@/entities/date";
 import { observer } from "mobx-react-lite";
 
-import { useNutritionStore } from "@/entities/nutrition";
-
 export const DayCalendarWidget = observer(() => {
-  const nutritionStore = useNutritionStore();
-  const isTodaySelected =
-    nutritionStore.selectedDate === nutritionStore.todayDateKey;
+  const dateStore = useDateStore();
+  const [isMounted, setIsMounted] = useState(false);
+  const isTodaySelected = dateStore.selectedDate === dateStore.todayDateKey;
+  const canSelectNextDay = isMounted && dateStore.canSelectNextDay;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <div className="w-full rounded-4xl bg-white p-5 shadow-xl">
@@ -15,16 +21,14 @@ export const DayCalendarWidget = observer(() => {
         <div>
           <h2 className="text-xl font-bold">Выберите день</h2>
           <p className="text-sm text-zinc-400">
-            {isTodaySelected
-              ? "Сегодня выбрано"
-              : "Выбран прошлый день, можно быстро вернуться назад"}
+            {isTodaySelected ? "Сегодня выбрано" : "Прошлый день"}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={nutritionStore.selectPreviousDay}
+            onClick={dateStore.selectPreviousDay}
             className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 text-lg font-semibold text-zinc-700 transition hover:bg-zinc-200"
             aria-label="Предыдущий день"
           >
@@ -33,10 +37,10 @@ export const DayCalendarWidget = observer(() => {
 
           <button
             type="button"
-            onClick={nutritionStore.selectNextDay}
-            disabled={!nutritionStore.canSelectNextDay}
+            onClick={dateStore.selectNextDay}
+            disabled={!canSelectNextDay}
             className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-semibold transition ${
-              nutritionStore.canSelectNextDay
+              canSelectNextDay
                 ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                 : "cursor-not-allowed bg-zinc-100 text-zinc-300"
             }`}
@@ -47,25 +51,15 @@ export const DayCalendarWidget = observer(() => {
         </div>
       </div>
 
-      {!isTodaySelected ? (
-        <button
-          type="button"
-          onClick={nutritionStore.selectToday}
-          className="mb-4 w-full rounded-3xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
-        >
-          Вернуться к текущему дню
-        </button>
-      ) : null}
-
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {nutritionStore.calendarDays.map((day) => {
-          const isActive = day.dateKey === nutritionStore.selectedDate;
+        {dateStore.calendarDays.map((day) => {
+          const isActive = day.dateKey === dateStore.selectedDate;
 
           return (
             <button
               key={day.dateKey}
               type="button"
-              onClick={() => nutritionStore.setSelectedDate(day.dateKey)}
+              onClick={() => dateStore.setSelectedDate(day.dateKey)}
               className={`rounded-3xl p-3 text-left transition ${
                 isActive
                   ? "bg-zinc-900 text-white shadow-lg"
@@ -83,6 +77,15 @@ export const DayCalendarWidget = observer(() => {
             </button>
           );
         })}
+        {!isTodaySelected ? (
+          <button
+            type="button"
+            onClick={dateStore.selectToday}
+            className="col-span-2 h-full w-full rounded-3xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
+          >
+            Вернуться к сегодня
+          </button>
+        ) : null}
       </div>
     </div>
   );
