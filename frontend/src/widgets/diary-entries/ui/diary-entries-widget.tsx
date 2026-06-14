@@ -5,17 +5,16 @@ import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
-import {
-  formatLongDay,
-  MEAL_TYPES,
-  type MealType,
-  useNutritionStore,
-} from "@/entities/nutrition";
+import { formatLongDay } from "@/shared/lib/format";
+import { useProductsStore } from "@/entities/products";
+import { useDateStore } from "@/entities/date";
+import { MEAL_TYPES, MealType } from "@/entities/date/model/types";
 
 export const DiaryEntriesWidget = observer(() => {
-  const nutritionStore = useNutritionStore();
-  const entries = nutritionStore.selectedEntries;
-  const products = nutritionStore.products;
+  const productsStore = useProductsStore();
+  const dateStore = useDateStore();
+  const entries = productsStore.selectedEntries(dateStore.selectedDate);
+  const products = productsStore.products;
   const [editingEntryId, setEditingEntryId] = useState("");
   const [editProductId, setEditProductId] = useState("");
   const [editAmountValue, setEditAmountValue] = useState("100");
@@ -27,14 +26,14 @@ export const DiaryEntriesWidget = observer(() => {
         <div>
           <p className="text-sm text-zinc-400">Дневник питания</p>
           <h2 className="text-2xl font-bold">
-            {formatLongDay(nutritionStore.selectedDate)}
+            {formatLongDay(dateStore.selectedDate)}
           </h2>
         </div>
 
         <div className="rounded-2xl bg-zinc-100 px-4 py-2 text-right">
           <p className="text-xs text-zinc-400">Всего</p>
           <p className="font-bold">
-            {nutritionStore.selectedDayTotals.calories} ккал
+            {productsStore.selectedDayTotals(dateStore.selectedDate).calories} ккал
           </p>
         </div>
       </div>
@@ -71,7 +70,7 @@ export const DiaryEntriesWidget = observer(() => {
                         ? Number(editAmountValue) / editProduct.amountValue
                         : Number(editAmountValue);
 
-                      nutritionStore.updateEntry(
+                      productsStore.updateEntry(
                         entry.id,
                         editProductId,
                         editMultiplier,
@@ -237,7 +236,7 @@ export const DiaryEntriesWidget = observer(() => {
 
                         <button
                           type="button"
-                          onClick={() => nutritionStore.removeEntry(entry.id)}
+                          onClick={() => productsStore.removeEntry(entry.id)}
                           className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
                         >
                           Удалить

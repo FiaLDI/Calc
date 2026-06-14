@@ -2,13 +2,8 @@
 
 import { useState } from "react";
 
-import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_UNITS,
-  type ProductCategory,
-  type ProductUnit,
-  useNutritionStore,
-} from "@/entities/nutrition";
+import { useProductsStore } from "@/entities/products";
+import { PRODUCT_CATEGORIES, PRODUCT_UNITS, ProductCategory, ProductUnit } from "@/entities/products/model/types";
 
 type ProductFormState = {
   amountUnit: ProductUnit;
@@ -45,7 +40,7 @@ export const AddProductForm = ({
   onCancel,
   onSuccess,
 }: AddProductFormProps) => {
-  const nutritionStore = useNutritionStore();
+  const productsStore = useProductsStore();
   const [formState, setFormState] = useState<ProductFormState>(initialFormState);
 
   const form = (
@@ -58,7 +53,7 @@ export const AddProductForm = ({
           return;
         }
 
-        nutritionStore.addProduct({
+        productsStore.addProduct({
           name: formState.name,
           category: formState.category,
           amountValue: Number(formState.amountValue),

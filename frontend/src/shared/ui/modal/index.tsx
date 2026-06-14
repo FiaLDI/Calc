@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { createPortal } from "react-dom";
 
-type ModalProps = PropsWithChildren<{
+export type ModalProps = PropsWithChildren<{
   isOpen: boolean;
   labelledBy?: string;
   maxWidthClassName?: string;

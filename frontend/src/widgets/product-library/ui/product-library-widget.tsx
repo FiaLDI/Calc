@@ -6,18 +6,15 @@ import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
 import { AddProductForm } from "@/features/add-product";
-import {
-  PRODUCT_CATEGORIES,
-  type ProductCategory,
-  useNutritionStore,
-} from "@/entities/nutrition";
 import { Modal, useModal } from "@/shared/ui/modal";
+import { useProductsStore } from "@/entities/products";
+import { PRODUCT_CATEGORIES, ProductCategory } from "@/entities/products/model/types";
 
 const ALL_CATEGORIES = "all";
 const ALL_SOURCES = "all";
 
 export const ProductLibraryWidget = observer(() => {
-  const nutritionStore = useNutritionStore();
+  const productsStore = useProductsStore();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
     ProductCategory | typeof ALL_CATEGORIES
@@ -25,7 +22,7 @@ export const ProductLibraryWidget = observer(() => {
   const [sourceFilter, setSourceFilter] = useState(ALL_SOURCES);
   const addProductModal = useModal();
 
-  const products = nutritionStore.products;
+  const products = productsStore.products;
   const hasProducts = products.length > 0;
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const sourceFilters = Array.from(
@@ -114,19 +111,19 @@ export const ProductLibraryWidget = observer(() => {
         </div>
       ) : null}
 
-      {nutritionStore.remoteProductsError ? (
+      {productsStore.remoteProductsError ? (
         <div className="mb-4 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          {nutritionStore.remoteProductsError}
+          {productsStore.remoteProductsError}
         </div>
       ) : null}
 
-      {!hasProducts && nutritionStore.isRemoteProductsLoading ? (
+      {!hasProducts && productsStore.isRemoteProductsLoading ? (
         <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
           Загружаем продукты с сервера...
         </div>
       ) : null}
 
-      {!hasProducts && !nutritionStore.isRemoteProductsLoading ? (
+      {!hasProducts && !productsStore.isRemoteProductsLoading ? (
         <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
           Каталог пока пуст. Проверь backend или добавь продукт вручную через форму
           выше.
@@ -198,7 +195,7 @@ export const ProductLibraryWidget = observer(() => {
                         );
 
                         if (shouldRemove) {
-                          nutritionStore.removeProduct(product.id);
+                          productsStore.removeProduct(product.id);
                         }
                       }}
                       className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"

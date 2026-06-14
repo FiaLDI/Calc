@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 
 import { observer } from "mobx-react-lite";
+import { useDateStore } from "@/entities/date";
 
-import { useNutritionStore } from "@/entities/nutrition";
 
 export const DayCalendarWidget = observer(() => {
-  const nutritionStore = useNutritionStore();
+  const dateStore = useDateStore();
   const [isMounted, setIsMounted] = useState(false);
   const isTodaySelected =
-    nutritionStore.selectedDate === nutritionStore.todayDateKey;
-  const canSelectNextDay = isMounted && nutritionStore.canSelectNextDay;
+    dateStore.selectedDate === dateStore.todayDateKey;
+  const canSelectNextDay = isMounted && dateStore.canSelectNextDay;
 
   useEffect(() => {
     setIsMounted(true);
@@ -32,7 +32,7 @@ export const DayCalendarWidget = observer(() => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={nutritionStore.selectPreviousDay}
+            onClick={dateStore.selectPreviousDay}
             className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 text-lg font-semibold text-zinc-700 transition hover:bg-zinc-200"
             aria-label="Предыдущий день"
           >
@@ -41,7 +41,7 @@ export const DayCalendarWidget = observer(() => {
 
           <button
             type="button"
-            onClick={nutritionStore.selectNextDay}
+            onClick={dateStore.selectNextDay}
             disabled={!canSelectNextDay}
             className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-semibold transition ${
               canSelectNextDay
@@ -55,17 +55,15 @@ export const DayCalendarWidget = observer(() => {
         </div>
       </div>
 
-      
-
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {nutritionStore.calendarDays.map((day) => {
-          const isActive = day.dateKey === nutritionStore.selectedDate;
+        {dateStore.calendarDays.map((day) => {
+          const isActive = day.dateKey === dateStore.selectedDate;
 
           return (
             <button
               key={day.dateKey}
               type="button"
-              onClick={() => nutritionStore.setSelectedDate(day.dateKey)}
+              onClick={() => dateStore.setSelectedDate(day.dateKey)}
               className={`rounded-3xl p-3 text-left transition ${
                 isActive
                   ? "bg-zinc-900 text-white shadow-lg"
@@ -86,7 +84,7 @@ export const DayCalendarWidget = observer(() => {
         {!isTodaySelected ? (
         <button
           type="button"
-          onClick={nutritionStore.selectToday}
+          onClick={dateStore.selectToday}
           className="h-full w-full rounded-3xl col-span-2 bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
         >
           Вернуться к сегодня

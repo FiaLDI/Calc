@@ -1,6 +1,7 @@
-import { AddDiaryEntryForm } from "@/features/add-diary-entry";
+
 import { CalorieSummaryWidget } from "@/widgets/calorie-summary";
 import { DayCalendarWidget } from "@/widgets/day-calendar";
+import { DiaryAdder } from "@/widgets/diary-adder";
 import { DiaryEntriesWidget } from "@/widgets/diary-entries";
 import { WeeklyKbjuWidget } from "@/widgets/weekly-kbju";
 
@@ -11,7 +12,7 @@ export const HomePage = () => {
         <div className="grid min-w-0 gap-4 self-start">
           <CalorieSummaryWidget />
           <DayCalendarWidget />
-          <AddDiaryEntryForm />
+          <DiaryAdder />
         </div>
 
         <div className="grid h-full min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4">

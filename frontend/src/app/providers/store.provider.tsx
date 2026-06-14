@@ -1,8 +1,9 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-
-import { NutritionStoreProvider } from "@/entities/nutrition";
+import { DateStoreProvider } from "@/entities/date";
+import { ProductStoreProvider } from "@/entities/products";
+import { SettingsStoreProvider } from "@/entities/settings";
 
 type StoreProviderProps = PropsWithChildren<{
   initialDateKey: string;
@@ -13,8 +14,12 @@ export const StoreProvider = ({
   initialDateKey,
 }: StoreProviderProps) => {
   return (
-    <NutritionStoreProvider initialDateKey={initialDateKey}>
-      {children}
-    </NutritionStoreProvider>
+      <SettingsStoreProvider>
+      <DateStoreProvider initialDateKey={initialDateKey}>
+        <ProductStoreProvider>
+          {children}
+        </ProductStoreProvider>
+      </DateStoreProvider>
+      </SettingsStoreProvider>
   );
 };

@@ -37,3 +37,8 @@ export const formatLongDay = (dateKey: string) =>
     day: "numeric",
     month: "long",
   }).format(parseDateKey(dateKey));
+
+export  const normalizeTimestamp = (value: unknown) =>
+  typeof value === "string" && !Number.isNaN(Date.parse(value))
+    ? value
+    : new Date().toISOString();

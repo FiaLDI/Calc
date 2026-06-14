@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
-import { formatDateKey } from "@/entities/nutrition/lib/date";
-
 import { AppProviders } from "./providers";
 import "./globals.css";
+import { formatDateKey } from "@/shared/lib/format";
 
 export const metadata: Metadata = {
   title: "Calc - твой помощник в мире калорий",

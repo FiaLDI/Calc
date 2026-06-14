@@ -2,50 +2,28 @@ import { makeAutoObservable, runInAction } from "mobx";
 import { fetchProductsFromApi } from "@/shared/api/products";
 
 import {
-  addDays,
-  formatDateKey,
-  formatLongDay,
-  formatShortDay,
   isValidDateKey,
-  parseDateKey,
-} from "../lib/date";
-import {
   normalizeNonNegative,
   normalizePositive,
   roundToOneDecimal,
-} from "../lib/number";
-import {
-  DEFAULT_NUTRITION_GOAL,
-  DEFAULT_TARGET_CALORIES,
-  DEFAULT_TARGET_CARBS,
-  DEFAULT_TARGET_FAT,
-  DEFAULT_TARGET_PROTEIN,
-  DEFAULT_TARGET_WEIGHT_KG,
-  STORAGE_KEY,
-} from "./constants";
+  normalizeTimestamp,
+} from "@/shared/lib/format";
 import {
   MEAL_TYPES,
-  NUTRITION_GOALS,
   PRODUCT_CATEGORIES,
   PRODUCT_UNITS,
   type DiaryEntry,
   type MealType,
-  type NutritionGoal,
   type Product,
   type ProductCategory,
   type ProductUnit,
 } from "./types";
+import { createId } from "@/shared/lib/utils";
+import { STORAGE_KEY } from "./constants";
 
 type StoreSnapshot = {
   entries: DiaryEntry[];
   products: Product[];
-  selectedDate: string;
-  nutritionGoal: NutritionGoal;
-  targetCarbs: number;
-  targetCalories: number;
-  targetFat: number;
-  targetProtein: number;
-  targetWeightKg: number;
 };
 
 type ProductDraft = Omit<
@@ -58,31 +36,7 @@ const CUSTOM_SOURCE_LABEL = "Мои продукты";
 const DEFAULT_PRODUCT_CATEGORY: ProductCategory = "Другое";
 const DEFAULT_PRODUCT_UNIT: ProductUnit = "г";
 const DEFAULT_MEAL_TYPE: MealType = "Завтрак";
-const DEFAULT_GOAL = DEFAULT_NUTRITION_GOAL as NutritionGoal;
-const NUTRITION_GOAL_SETTINGS: Record<
-  NutritionGoal,
-  {
-    caloriesPerKg: number;
-    fatPerKg: number;
-    proteinPerKg: number;
-  }
-> = {
-  Сушка: {
-    caloriesPerKg: 28,
-    fatPerKg: 0.8,
-    proteinPerKg: 2.1,
-  },
-  Поддержание: {
-    caloriesPerKg: 32,
-    fatPerKg: 0.9,
-    proteinPerKg: 1.7,
-  },
-  Набор: {
-    caloriesPerKg: 36,
-    fatPerKg: 1,
-    proteinPerKg: 1.9,
-  },
-};
+
 
 const isProductUnit = (value: unknown): value is ProductUnit =>
   typeof value === "string" &&
@@ -95,25 +49,8 @@ const isProductCategory = (value: unknown): value is ProductCategory =>
 const isMealType = (value: unknown): value is MealType =>
   typeof value === "string" && (MEAL_TYPES as readonly string[]).includes(value);
 
-const isNutritionGoal = (value: unknown): value is NutritionGoal =>
-  typeof value === "string" &&
-  (NUTRITION_GOALS as readonly string[]).includes(value);
-
 const normalizeOptionalString = (value: unknown) =>
   typeof value === "string" ? value.trim() : "";
-
-const createId = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-};
-
-const normalizeTimestamp = (value: unknown) =>
-  typeof value === "string" && !Number.isNaN(Date.parse(value))
-    ? value
-    : new Date().toISOString();
 
 const sanitizeProduct = (value: unknown): Product | null => {
   if (!value || typeof value !== "object") {
@@ -200,25 +137,15 @@ const sanitizeEntry = (value: unknown): DiaryEntry | null => {
   };
 };
 
-class NutritionStore {
+class ProductsStore {
   entries: DiaryEntry[] = [];
   customProducts: Product[] = [];
   remoteProducts: Product[] = [];
-  selectedDate: string;
-  todayDateKey: string;
-  targetCalories = DEFAULT_TARGET_CALORIES;
-  targetProtein = DEFAULT_TARGET_PROTEIN;
-  targetCarbs = DEFAULT_TARGET_CARBS;
-  targetFat = DEFAULT_TARGET_FAT;
-  targetWeightKg = DEFAULT_TARGET_WEIGHT_KG;
-  nutritionGoal = DEFAULT_GOAL;
   isHydrated = false;
   isRemoteProductsLoading = false;
   remoteProductsError = "";
 
-  constructor(initialDateKey = formatDateKey(new Date())) {
-    this.selectedDate = initialDateKey;
-    this.todayDateKey = initialDateKey;
+  constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -228,7 +155,6 @@ class NutritionStore {
     }
 
     try {
-      this.todayDateKey = formatDateKey(new Date());
       const rawState = window.localStorage.getItem(STORAGE_KEY);
 
       if (!rawState) {
@@ -247,43 +173,9 @@ class NutritionStore {
             .map((product) => sanitizeProduct(product))
             .filter((product): product is Product => product !== null)
         : [];
-      this.selectedDate = isValidDateKey(parsedState.selectedDate)
-        ? parsedState.selectedDate
-        : this.selectedDate;
-      this.targetCalories = normalizePositive(
-        parsedState.targetCalories ?? 0,
-        DEFAULT_TARGET_CALORIES
-      );
-      this.targetProtein = normalizePositive(
-        parsedState.targetProtein ?? 0,
-        DEFAULT_TARGET_PROTEIN
-      );
-      this.targetCarbs = normalizePositive(
-        parsedState.targetCarbs ?? 0,
-        DEFAULT_TARGET_CARBS
-      );
-      this.targetFat = normalizePositive(
-        parsedState.targetFat ?? 0,
-        DEFAULT_TARGET_FAT
-      );
-      this.targetWeightKg = normalizePositive(
-        parsedState.targetWeightKg ?? 0,
-        DEFAULT_TARGET_WEIGHT_KG
-      );
-      this.nutritionGoal = isNutritionGoal(parsedState.nutritionGoal)
-        ? parsedState.nutritionGoal
-        : DEFAULT_GOAL;
     } catch {
       this.entries = [];
       this.customProducts = [];
-      this.todayDateKey = formatDateKey(new Date());
-      this.selectedDate = this.todayDateKey;
-      this.targetCalories = DEFAULT_TARGET_CALORIES;
-      this.targetProtein = DEFAULT_TARGET_PROTEIN;
-      this.targetCarbs = DEFAULT_TARGET_CARBS;
-      this.targetFat = DEFAULT_TARGET_FAT;
-      this.targetWeightKg = DEFAULT_TARGET_WEIGHT_KG;
-      this.nutritionGoal = DEFAULT_GOAL;
     } finally {
       this.isHydrated = true;
     }
@@ -296,14 +188,7 @@ class NutritionStore {
 
     const snapshot: StoreSnapshot = {
       entries: this.entries,
-      nutritionGoal: this.nutritionGoal,
       products: this.customProducts,
-      selectedDate: this.selectedDate,
-      targetCarbs: this.targetCarbs,
-      targetCalories: this.targetCalories,
-      targetFat: this.targetFat,
-      targetProtein: this.targetProtein,
-      targetWeightKg: this.targetWeightKg,
     };
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
@@ -351,93 +236,6 @@ class NutritionStore {
     }
   }
 
-  setSelectedDate(dateKey: string) {
-    this.ensureHydrated();
-
-    if (!isValidDateKey(dateKey)) {
-      return;
-    }
-
-    const normalizedDateKey =
-      parseDateKey(dateKey).getTime() > parseDateKey(this.todayDateKey).getTime()
-        ? this.todayDateKey
-        : dateKey;
-
-    this.selectedDate = normalizedDateKey;
-    this.persist();
-  }
-
-  selectPreviousDay() {
-    this.ensureHydrated();
-    this.setSelectedDate(
-      formatDateKey(addDays(parseDateKey(this.selectedDate), -1))
-    );
-  }
-
-  selectNextDay() {
-    this.ensureHydrated();
-    if (!this.canSelectNextDay) {
-      return;
-    }
-
-    this.setSelectedDate(
-      formatDateKey(addDays(parseDateKey(this.selectedDate), 1))
-    );
-  }
-
-  selectToday() {
-    this.ensureHydrated();
-    this.setSelectedDate(this.todayDateKey);
-  }
-
-  setTargetCalories(value: number) {
-    this.ensureHydrated();
-    this.targetCalories = normalizePositive(Math.round(value), 1);
-    this.persist();
-  }
-
-  setNutritionTargets(targets: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    goal?: NutritionGoal;
-    weightKg?: number;
-  }) {
-    this.ensureHydrated();
-    this.targetCalories = normalizePositive(Math.round(targets.calories), 1);
-    this.targetProtein = normalizePositive(targets.protein, 1);
-    this.targetCarbs = normalizePositive(targets.carbs, 1);
-    this.targetFat = normalizePositive(targets.fat, 1);
-    this.targetWeightKg = normalizePositive(
-      targets.weightKg ?? this.targetWeightKg,
-      DEFAULT_TARGET_WEIGHT_KG
-    );
-    this.nutritionGoal = isNutritionGoal(targets.goal)
-      ? targets.goal
-      : this.nutritionGoal;
-    this.persist();
-  }
-
-  calculateNutritionTargets(weightKg: number, goal: NutritionGoal) {
-    const normalizedWeight = normalizePositive(weightKg, DEFAULT_TARGET_WEIGHT_KG);
-    const settings = NUTRITION_GOAL_SETTINGS[goal];
-    const calories = Math.round(normalizedWeight * settings.caloriesPerKg);
-    const protein = Math.round(normalizedWeight * settings.proteinPerKg);
-    const fat = Math.round(normalizedWeight * settings.fatPerKg);
-    const carbs = Math.max(
-      1,
-      Math.round((calories - protein * 4 - fat * 9) / 4)
-    );
-
-    return {
-      calories,
-      protein,
-      carbs,
-      fat,
-    };
-  }
-
   addProduct(draft: ProductDraft) {
     this.ensureHydrated();
     const product: Product = {
@@ -476,7 +274,7 @@ class NutritionStore {
     this.persist();
   }
 
-  addEntry(productId: string, servings: number, mealType: MealType) {
+  addEntry(productId: string, servings: number, mealType: MealType, date: string) {
     this.ensureHydrated();
     const product = this.products.find((item) => item.id === productId);
 
@@ -499,7 +297,7 @@ class NutritionStore {
       amountUnit: product.amountUnit,
       servings: normalizedServings,
       mealType,
-      date: this.selectedDate,
+      date: date,
       calories: Math.round(product.calories * normalizedServings),
       protein: roundToOneDecimal(product.protein * normalizedServings),
       carbs: roundToOneDecimal(product.carbs * normalizedServings),
@@ -570,39 +368,19 @@ class NutritionStore {
     });
   }
 
-  get canSelectNextDay() {
-    return (
-      parseDateKey(this.selectedDate).getTime() <
-      parseDateKey(this.todayDateKey).getTime()
-    );
-  }
-
-  get calendarDays() {
-    const selectedDate = parseDateKey(this.selectedDate);
-    const today = parseDateKey(this.todayDateKey);
-    const suggestedEndDate = addDays(selectedDate, 3);
-    const endDate =
-      suggestedEndDate.getTime() > today.getTime() ? today : suggestedEndDate;
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const dateKey = formatDateKey(addDays(endDate, index - 6));
-
-      return {
-        dateKey,
-        shortLabel: formatShortDay(dateKey),
-        longLabel: formatLongDay(dateKey),
-      };
-    });
-  }
-
-  get selectedEntries() {
+  selectedEntries(date: string) {
     return this.entries
-      .filter((entry) => entry.date === this.selectedDate)
+      .filter((entry) => entry.date === date)
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }
 
-  get selectedDayTotals() {
-    return this.selectedEntries.reduce(
+  selectedDayTotals(date: string): {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+  } {
+    return this.selectedEntries(date).reduce(
       (totals, entry) => ({
         calories: totals.calories + entry.calories,
         protein: totals.protein + entry.protein,
@@ -618,17 +396,13 @@ class NutritionStore {
     );
   }
 
-  get macroTargets() {
-    return {
-      protein: this.targetProtein,
-      carbs: this.targetCarbs,
-      fat: this.targetFat,
-    };
-  }
-
-  get macroProgress() {
-    const targets = this.macroTargets;
-    const totals = this.selectedDayTotals;
+  macroProgress(macroTargets:  {
+        protein: number;
+        carbs: number;
+        fat: number;
+    }, date: string) {
+    const targets = macroTargets;
+    const totals = this.selectedDayTotals(date);
 
     return [
       {
@@ -664,15 +438,8 @@ class NutritionStore {
     ];
   }
 
-  get weeklyDays() {
-    return this.calendarDays.map(({ dateKey, shortLabel }) => ({
-      dateKey,
-      day: shortLabel,
-    }));
-  }
-
-  get weeklyCalories() {
-    return this.weeklyDays.map(({ dateKey, day }) => {
+  weeklyCalories(weeklyDays: any) {
+    return weeklyDays.map(({ dateKey, day } : any) => {
       const dayCalories = this.entries
         .filter((entry) => entry.date === dateKey)
         .reduce((sum, entry) => sum + entry.calories, 0);
@@ -684,8 +451,8 @@ class NutritionStore {
     });
   }
 
-  get weeklyKbju() {
-    return this.weeklyDays.map(({ dateKey, day }) => {
+  weeklyKbju(weeklyDays: any) {
+    return weeklyDays.map(({ dateKey, day } : any) => {
       const totals = this.entries
         .filter((entry) => entry.date === dateKey)
         .reduce(
@@ -710,13 +477,13 @@ class NutritionStore {
     });
   }
 
-  get weeklyCaloriesStats() {
-    const calories = this.weeklyCalories.map((item) => item.calories);
+  weeklyCaloriesStats(weeklyDays: any) {
+    const calories = this.weeklyCalories(weeklyDays).map((item: any) => item.calories);
 
     return {
       average: calories.length
         ? Math.round(
-            calories.reduce((sum, value) => sum + value, 0) / calories.length
+            calories.reduce((sum: any, value: any) => sum + value, 0) / calories.length
           )
         : 0,
       max: calories.length ? Math.max(...calories) : 0,
@@ -725,5 +492,5 @@ class NutritionStore {
   }
 }
 
-export const createNutritionStore = (initialDateKey?: string) =>
-  new NutritionStore(initialDateKey);
+export const createProductsStore = () =>
+  new ProductsStore();
