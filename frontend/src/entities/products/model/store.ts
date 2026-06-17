@@ -1,6 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
-import { fetchProductsFromApi } from "@/shared/api/products";
 import { normalizeNonNegative, normalizePositive } from "@/shared/lib/format";
 import { createId } from "@/shared/lib/utils";
 
@@ -10,6 +9,7 @@ import {
   sanitizeProduct,
 } from "../lib/sanitize";
 import { CUSTOM_SOURCE_KEY, CUSTOM_SOURCE_LABEL, STORAGE_KEY } from "./constants";
+import { ProductApi } from "./api";
 import type { Product } from "./types";
 
 type StoreSnapshot = {
@@ -79,7 +79,7 @@ class ProductsStore {
     this.remoteProductsError = "";
 
     try {
-      const products = await fetchProductsFromApi();
+      const products = await ProductApi.fetchProducts();
       const remoteProducts = products
         .map((product) => sanitizeProduct({ ...product, isReadonly: true }))
         .filter((product): product is Product => product !== null);

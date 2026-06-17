@@ -12,20 +12,9 @@ import {
   DEFAULT_TARGET_WEIGHT_KG,
   STORAGE_KEY,
 } from "./constants";
-import { NUTRITION_GOALS, type NutritionGoal } from "./types";
+import { SettingsSnapshot, type NutritionGoal } from "./types";
+import { isNutritionGoal } from "../lib/sanitize";
 
-type StoreSnapshot = {
-  nutritionGoal: NutritionGoal;
-  targetCarbs: number;
-  targetCalories: number;
-  targetFat: number;
-  targetProtein: number;
-  targetWeightKg: number;
-};
-
-const isNutritionGoal = (value: unknown): value is NutritionGoal =>
-  typeof value === "string" &&
-  (NUTRITION_GOALS as readonly string[]).includes(value);
 
 class SettingsStore {
   targetCalories = DEFAULT_TARGET_CALORIES;
@@ -52,7 +41,7 @@ class SettingsStore {
         return;
       }
 
-      const parsedState = JSON.parse(rawState) as Partial<StoreSnapshot>;
+      const parsedState = JSON.parse(rawState) as Partial<SettingsSnapshot>;
 
       this.targetCalories = normalizePositive(
         parsedState.targetCalories ?? 0,
@@ -94,7 +83,7 @@ class SettingsStore {
       return;
     }
 
-    const snapshot: StoreSnapshot = {
+    const snapshot: SettingsSnapshot = {
       nutritionGoal: this.nutritionGoal,
       targetCarbs: this.targetCarbs,
       targetCalories: this.targetCalories,
