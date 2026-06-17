@@ -20,9 +20,7 @@ export const getEntriesByDate = (entries: DiaryEntry[], date: string) =>
     .filter((entry) => entry.date === date)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 
-export const getNutritionTotals = (
-  entries: DiaryEntry[]
-): NutritionTotals =>
+export const getNutritionTotals = (entries: DiaryEntry[]): NutritionTotals =>
   entries.reduce<NutritionTotals>(
     (totals, entry) => ({
       calories: totals.calories + entry.calories,

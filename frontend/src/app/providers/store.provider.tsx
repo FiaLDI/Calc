@@ -1,6 +1,7 @@
 "use client";
 
 import { DateStoreProvider } from "@/entities/date";
+import { DiaryEntriesProvider } from "@/entities/entries";
 import { ProductStoreProvider } from "@/entities/products";
 import { SettingsStoreProvider } from "@/entities/settings";
 import type { PropsWithChildren } from "react";
@@ -16,7 +17,11 @@ export const StoreProvider = ({
   return (
     <SettingsStoreProvider>
       <DateStoreProvider initialDateKey={initialDateKey}>
-        <ProductStoreProvider>{children}</ProductStoreProvider>
+        <ProductStoreProvider>
+          <DiaryEntriesProvider>
+            {children}
+          </DiaryEntriesProvider>
+        </ProductStoreProvider>
       </DateStoreProvider>
     </SettingsStoreProvider>
   );

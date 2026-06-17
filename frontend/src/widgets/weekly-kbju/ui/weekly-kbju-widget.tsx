@@ -1,5 +1,8 @@
 "use client";
 
+import { useDateStore } from "@/entities/date";
+import { type WeeklyKbjuPoint, useDiaryEntriesStore } from "@/entities/entries";
+import { useElementSize } from "@/shared/lib/use-element-size";
 import { observer } from "mobx-react-lite";
 import {
   Bar,
@@ -10,14 +13,10 @@ import {
   YAxis,
 } from "recharts";
 
-import { useDateStore } from "@/entities/date";
-import { useProductsStore, type WeeklyKbjuPoint } from "@/entities/products";
-import { useElementSize } from "@/shared/lib/use-element-size";
-
 export const WeeklyKbjuWidget = observer(() => {
-  const productsStore = useProductsStore();
+  const diaryEntriesStore = useDiaryEntriesStore();
   const dateStore = useDateStore();
-  const weeklyKbju = productsStore.weeklyKbju(dateStore.weeklyDays);
+  const weeklyKbju = diaryEntriesStore.weeklyKbju(dateStore.weeklyDays);
   const { hasSize, height, ref, width } = useElementSize<HTMLDivElement>();
 
   return (

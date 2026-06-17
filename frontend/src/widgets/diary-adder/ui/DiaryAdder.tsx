@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { useDateStore } from "@/entities/date";
+import { useDiaryEntriesStore } from "@/entities/entries";
 import { useProductsStore } from "@/entities/products";
 import { AddProductEntryForm } from "@/features/add-product-entry";
 import { FindProductForm } from "@/features/find-product";
@@ -11,6 +12,7 @@ import { observer } from "mobx-react-lite";
 
 export const DiaryAdder = observer(() => {
   const productsStore = useProductsStore();
+  const diaryEntriesStore = useDiaryEntriesStore();
   const dateStore = useDateStore();
   const [selectedProductId, setSelectedProductId] = useState("");
   const addProductModal = useModal();
@@ -32,9 +34,9 @@ export const DiaryAdder = observer(() => {
 
       <AddProductEntryForm
         dateStore={dateStore}
+        diaryEntriesStore={diaryEntriesStore}
         productPickerModal={productPickerModal}
         products={products}
-        productsStore={productsStore}
         selectedProductId={effectiveSelectedProductId}
       />
 

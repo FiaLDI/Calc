@@ -1,29 +1,29 @@
 import { useState } from "react";
 
+import type { createDateStore } from "@/entities/date";
 import {
   MEAL_TYPES,
+  type DiaryEntriesInstance,
   type MealType,
-  type Product,
-  type ProductsStoreInstance,
-} from "@/entities/products";
-import type { createDateStore } from "@/entities/date";
+} from "@/entities/entries";
+import type { Product } from "@/entities/products";
 import { roundToOneDecimal } from "@/shared/lib/format";
 import { useModal } from "@/shared/ui/modal";
 import Image from "next/image";
 
 type AddProductEntryFormProps = {
   dateStore: ReturnType<typeof createDateStore>;
+  diaryEntriesStore: DiaryEntriesInstance;
   productPickerModal: ReturnType<typeof useModal>;
   products: Product[];
-  productsStore: ProductsStoreInstance;
   selectedProductId: string;
 };
 
 export const AddProductEntryForm = ({
   dateStore,
+  diaryEntriesStore,
   productPickerModal,
   products,
-  productsStore,
   selectedProductId,
 }: AddProductEntryFormProps) => {
   const [mealType, setMealType] = useState<MealType>("Завтрак");
@@ -65,12 +65,12 @@ export const AddProductEntryForm = ({
       onSubmit={(event) => {
         event.preventDefault();
 
-        if (!selectedProductId) {
+        if (!selectedProduct) {
           return;
         }
 
-        productsStore.addEntry(
-          selectedProductId,
+        diaryEntriesStore.addEntry(
+          selectedProduct,
           amountMultiplier,
           mealType,
           dateStore.selectedDate

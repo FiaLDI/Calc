@@ -1,12 +1,12 @@
 import { roundToOneDecimal } from "@/shared/lib/format";
 
-import type { NutritionTotals, Product } from "../model/types";
+import type { EntryProduct, NutritionTotals } from "../model/types";
 
 export const normalizeServings = (servings: number) =>
   Math.max(0.1, roundToOneDecimal(servings || 1));
 
 export const calculateEntryNutrition = (
-  product: Product,
+  product: EntryProduct,
   servings: number
 ): NutritionTotals => ({
   calories: Math.round(product.calories * servings),

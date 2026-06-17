@@ -1,20 +1,19 @@
 "use client";
 
-import { observer } from "mobx-react-lite";
-
 import { useDateStore } from "@/entities/date";
-import { useProductsStore } from "@/entities/products";
+import { useDiaryEntriesStore } from "@/entities/entries";
 import { useSettingsStore } from "@/entities/settings";
 import { SetSettingsModal } from "@/features/set-settings";
+import { observer } from "mobx-react-lite";
 
 export const CalorieSummaryWidget = observer(() => {
   const settingsStore = useSettingsStore();
-  const productsStore = useProductsStore();
+  const diaryEntriesStore = useDiaryEntriesStore();
   const dateStore = useDateStore();
-  const selectedDayTotals = productsStore.selectedDayTotals(
+  const selectedDayTotals = diaryEntriesStore.selectedDayTotals(
     dateStore.selectedDate
   );
-  const macroProgress = productsStore.macroProgress(
+  const macroProgress = diaryEntriesStore.macroProgress(
     settingsStore.macroTargets,
     dateStore.selectedDate
   );

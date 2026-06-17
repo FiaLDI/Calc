@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { useDateStore } from "@/entities/date";
+import { MEAL_TYPES, type MealType, useDiaryEntriesStore } from "@/entities/entries";
+import { useProductsStore } from "@/entities/products";
+import { formatLongDay } from "@/shared/lib/format";
 import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
-import { useDateStore } from "@/entities/date";
-import { MEAL_TYPES, type MealType, useProductsStore } from "@/entities/products";
-import { formatLongDay } from "@/shared/lib/format";
-
 export const DiaryEntriesWidget = observer(() => {
   const productsStore = useProductsStore();
+  const diaryEntriesStore = useDiaryEntriesStore();
   const dateStore = useDateStore();
-  const entries = productsStore.selectedEntries(dateStore.selectedDate);
+  const entries = diaryEntriesStore.selectedEntries(dateStore.selectedDate);
   const products = productsStore.products;
-  const selectedDayTotals = productsStore.selectedDayTotals(
+  const productsById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products]
+  );
+  const selectedDayTotals = diaryEntriesStore.selectedDayTotals(
     dateStore.selectedDate
   );
   const [editingEntryId, setEditingEntryId] = useState("");
@@ -59,20 +64,18 @@ export const DiaryEntriesWidget = observer(() => {
                     onSubmit={(event) => {
                       event.preventDefault();
 
-                      if (!editProductId) {
+                      const editProduct = productsById.get(editProductId);
+
+                      if (!editProduct) {
                         return;
                       }
 
-                      const editProduct = products.find(
-                        (product) => product.id === editProductId
-                      );
-                      const editMultiplier = editProduct
-                        ? Number(editAmountValue) / editProduct.amountValue
-                        : Number(editAmountValue);
+                      const editMultiplier =
+                        Number(editAmountValue) / editProduct.amountValue;
 
-                      productsStore.updateEntry(
+                      diaryEntriesStore.updateEntry(
                         entry.id,
-                        editProductId,
+                        editProduct,
                         editMultiplier,
                         editMealType
                       );
@@ -88,9 +91,7 @@ export const DiaryEntriesWidget = observer(() => {
                           value={editProductId}
                           onChange={(event) => {
                             const nextProductId = event.target.value;
-                            const nextProduct = products.find(
-                              (product) => product.id === nextProductId
-                            );
+                            const nextProduct = productsById.get(nextProductId);
 
                             setEditProductId(nextProductId);
 
@@ -126,9 +127,8 @@ export const DiaryEntriesWidget = observer(() => {
                             className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-400"
                           />
                           <div className="flex items-center justify-center rounded-2xl bg-zinc-100 text-xs font-semibold text-zinc-600">
-                            {products.find(
-                              (product) => product.id === editProductId
-                            )?.amountUnit || entry.amountUnit}
+                            {productsById.get(editProductId)?.amountUnit ||
+                              entry.amountUnit}
                           </div>
                         </div>
                       </div>
@@ -211,16 +211,15 @@ export const DiaryEntriesWidget = observer(() => {
                         <button
                           type="button"
                           onClick={() => {
-                            const productExists = products.some(
-                              (product) => product.id === entry.productId
-                            );
+                            const fallbackProductId = products[0]?.id || "";
+                            const editableProductId = productsById.has(
+                              entry.productId
+                            )
+                              ? entry.productId
+                              : fallbackProductId;
 
                             setEditingEntryId(entry.id);
-                            setEditProductId(
-                              productExists
-                                ? entry.productId
-                                : products[0]?.id || ""
-                            );
+                            setEditProductId(editableProductId);
                             setEditAmountValue(
                               String(
                                 Math.round(
@@ -237,7 +236,7 @@ export const DiaryEntriesWidget = observer(() => {
 
                         <button
                           type="button"
-                          onClick={() => productsStore.removeEntry(entry.id)}
+                          onClick={() => diaryEntriesStore.removeEntry(entry.id)}
                           className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
                         >
                           Удалить
