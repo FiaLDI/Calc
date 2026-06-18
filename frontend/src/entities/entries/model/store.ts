@@ -1,12 +1,11 @@
-import { makeAutoObservable } from "mobx";
-
-import { createId } from "@/shared/lib/utils";
+import { makeAutoObservable, runInAction } from "mobx";
 
 import {
   calculateEntryNutrition,
   normalizeServings,
 } from "../lib/calculate-entry-nutrition";
 import { sanitizeEntry } from "../lib/sanitize";
+import { EntriesApi, type EntryApiPayload } from "./api";
 import { STORAGE_KEY } from "./constants";
 import {
   getDayTotals,
@@ -31,6 +30,8 @@ type StoreSnapshot = {
 class DiaryEntriesStore {
   entries: DiaryEntry[] = [];
   isHydrated = false;
+  isRemoteEntriesLoading = false;
+  remoteEntriesError = "";
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -60,6 +61,8 @@ class DiaryEntriesStore {
     } finally {
       this.isHydrated = true;
     }
+
+    void this.loadEntries();
   }
 
   persist() {
@@ -80,18 +83,51 @@ class DiaryEntriesStore {
     }
   }
 
-  addEntry(
+  async loadEntries() {
+    if (typeof window === "undefined" || this.isRemoteEntriesLoading) {
+      return;
+    }
+
+    this.isRemoteEntriesLoading = true;
+    this.remoteEntriesError = "";
+
+    try {
+      const entries = await EntriesApi.fetchEntries({
+        limit: 1000,
+        offset: 0,
+      });
+      const sanitizedEntries = entries
+        .map((entry) => sanitizeEntry(entry))
+        .filter((entry): entry is DiaryEntry => entry !== null);
+
+      runInAction(() => {
+        this.entries = sanitizedEntries;
+        this.persist();
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.remoteEntriesError =
+          error instanceof Error
+            ? error.message
+            : "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґРЅРµРІРЅРёРє.";
+      });
+    } finally {
+      runInAction(() => {
+        this.isRemoteEntriesLoading = false;
+      });
+    }
+  }
+
+  private buildEntryPayload(
     product: EntryProduct,
     servings: number,
     mealType: MealType,
     date: string
-  ) {
-    this.ensureHydrated();
-
+  ): EntryApiPayload {
     const normalizedServings = normalizeServings(servings);
     const nutrition = calculateEntryNutrition(product, normalizedServings);
-    const entry: DiaryEntry = {
-      id: createId(),
+
+    return {
       productId: product.id,
       productName: product.name,
       productImageAlt: product.imageAlt || product.name,
@@ -102,14 +138,28 @@ class DiaryEntriesStore {
       mealType,
       date,
       ...nutrition,
-      createdAt: new Date().toISOString(),
     };
-
-    this.entries.unshift(entry);
-    this.persist();
   }
 
-  updateEntry(
+  async addEntry(
+    product: EntryProduct,
+    servings: number,
+    mealType: MealType,
+    date: string
+  ) {
+    this.ensureHydrated();
+
+    const entry = await EntriesApi.createEntry(
+      this.buildEntryPayload(product, servings, mealType, date)
+    );
+
+    runInAction(() => {
+      this.entries.unshift(entry);
+      this.persist();
+    });
+  }
+
+  async updateEntry(
     entryId: string,
     product: EntryProduct,
     servings: number,
@@ -117,32 +167,39 @@ class DiaryEntriesStore {
   ) {
     this.ensureHydrated();
 
-    const normalizedServings = normalizeServings(servings);
-    const nutrition = calculateEntryNutrition(product, normalizedServings);
+    const currentEntry = this.entries.find((entry) => entry.id === entryId);
 
-    this.entries = this.entries.map((entry) =>
-      entry.id === entryId
-        ? {
-            ...entry,
-            productId: product.id,
-            productName: product.name,
-            productImageAlt: product.imageAlt || product.name,
-            productImageUrl: product.imageUrl,
-            amountValue: product.amountValue,
-            amountUnit: product.amountUnit,
-            servings: normalizedServings,
-            mealType,
-            ...nutrition,
-          }
-        : entry
+    if (!currentEntry) {
+      return;
+    }
+
+    const updatedEntry = await EntriesApi.updateEntry(
+      entryId,
+      this.buildEntryPayload(
+        product,
+        servings,
+        mealType,
+        currentEntry.date
+      )
     );
-    this.persist();
+
+    runInAction(() => {
+      this.entries = this.entries.map((entry) =>
+        entry.id === entryId ? updatedEntry : entry
+      );
+      this.persist();
+    });
   }
 
-  removeEntry(entryId: string) {
+  async removeEntry(entryId: string) {
     this.ensureHydrated();
-    this.entries = this.entries.filter((entry) => entry.id !== entryId);
-    this.persist();
+
+    await EntriesApi.removeEntry(entryId);
+
+    runInAction(() => {
+      this.entries = this.entries.filter((entry) => entry.id !== entryId);
+      this.persist();
+    });
   }
 
   selectedEntries(date: string) {

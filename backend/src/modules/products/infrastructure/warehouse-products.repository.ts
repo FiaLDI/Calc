@@ -1,11 +1,11 @@
-import warehouseProducts from "../data/sources/warehouse-products.json" with { type: "json" };
+import warehouseProducts from "./data/sources/warehouse-products.json" with { type: "json" };
 import type {
   ProductCategory,
   ProductDto,
   ProductSourceMeta,
+  ProductSourceRepository,
   ProductUnit,
-} from "../model/types.js";
-import type { ProductSourceRepository } from "./product-source.repository.js";
+} from "../domain/products.types.js";
 
 type WarehouseProductRecord = {
   carbGrams: number;

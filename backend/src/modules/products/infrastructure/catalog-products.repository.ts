@@ -1,11 +1,11 @@
-import catalogProducts from "../data/sources/catalog-products.json" with { type: "json" };
+import catalogProducts from "./data/sources/catalog-products.json" with { type: "json" };
 import type {
   ProductCategory,
   ProductDto,
   ProductSourceMeta,
+  ProductSourceRepository,
   ProductUnit,
-} from "../model/types.js";
-import type { ProductSourceRepository } from "./product-source.repository.js";
+} from "../domain/products.types.js";
 
 type CatalogProductRecord = {
   categoryLabel: ProductCategory;

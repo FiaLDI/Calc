@@ -1,16 +1,19 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { normalizeNonNegative, normalizePositive } from "@/shared/lib/format";
-import { createId } from "@/shared/lib/utils";
 
 import {
   isProductCategory,
   isProductUnit,
   sanitizeProduct,
 } from "../lib/sanitize";
-import { CUSTOM_SOURCE_KEY, CUSTOM_SOURCE_LABEL, STORAGE_KEY } from "./constants";
-import { ProductApi } from "./api";
-import type { Product } from "./types";
+import { CUSTOM_SOURCE_KEY, STORAGE_KEY } from "./constants";
+import {
+  ProductApi,
+  type ProductApiPayload,
+  type ProductSourceApiItem,
+} from "./api";
+import { PRODUCT_CATEGORIES, PRODUCT_UNITS, type Product } from "./types";
 
 type StoreSnapshot = {
   products: Product[];
@@ -24,6 +27,7 @@ export type ProductDraft = Omit<
 class ProductsStore {
   customProducts: Product[] = [];
   remoteProducts: Product[] = [];
+  remoteProductSources: ProductSourceApiItem[] = [];
   isHydrated = false;
   isRemoteProductsLoading = false;
   remoteProductsError = "";
@@ -79,20 +83,24 @@ class ProductsStore {
     this.remoteProductsError = "";
 
     try {
-      const products = await ProductApi.fetchProducts();
+      const [products, productSources] = await Promise.all([
+        ProductApi.fetchProducts(),
+        ProductApi.fetchProductSources(),
+      ]);
       const remoteProducts = products
-        .map((product) => sanitizeProduct({ ...product, isReadonly: true }))
+        .map((product) => sanitizeProduct(product))
         .filter((product): product is Product => product !== null);
 
       runInAction(() => {
         this.remoteProducts = remoteProducts;
+        this.remoteProductSources = productSources;
       });
     } catch (error) {
       runInAction(() => {
         this.remoteProductsError =
           error instanceof Error
             ? error.message
-            : "Не удалось загрузить каталог продуктов.";
+            : "Failed to load product catalog.";
       });
     } finally {
       runInAction(() => {
@@ -107,44 +115,75 @@ class ProductsStore {
     }
   }
 
-  addProduct(draft: ProductDraft) {
+  private buildProductPayload(draft: ProductDraft): ProductApiPayload | null {
     this.ensureHydrated();
 
     const name = draft.name.trim();
 
     if (!name) {
-      return;
+      return null;
     }
 
-    const product: Product = {
-      ...draft,
-      id: createId(),
-      name,
-      category: isProductCategory(draft.category) ? draft.category : "Другое",
+    return {
+      amountUnit: isProductUnit(draft.amountUnit)
+        ? draft.amountUnit
+        : PRODUCT_UNITS[0],
       amountValue: normalizePositive(draft.amountValue, 100),
-      amountUnit: isProductUnit(draft.amountUnit) ? draft.amountUnit : "г",
       calories: normalizeNonNegative(draft.calories),
-      protein: normalizeNonNegative(draft.protein),
       carbs: normalizeNonNegative(draft.carbs),
+      category: isProductCategory(draft.category)
+        ? draft.category
+        : PRODUCT_CATEGORIES[PRODUCT_CATEGORIES.length - 1],
       fat: normalizeNonNegative(draft.fat),
-      createdAt: new Date().toISOString(),
       imageAlt: draft.imageAlt.trim() || name,
       imageUrl: draft.imageUrl.trim(),
-      sourceKey: CUSTOM_SOURCE_KEY,
-      sourceLabel: CUSTOM_SOURCE_LABEL,
-      isReadonly: false,
+      name,
+      protein: normalizeNonNegative(draft.protein),
     };
-
-    this.customProducts.unshift(product);
-    this.persist();
   }
 
-  removeProduct(productId: string) {
+  async addProduct(draft: ProductDraft) {
+    const payload = this.buildProductPayload(draft);
+
+    if (!payload) {
+      return null;
+    }
+
+    const product = await ProductApi.createProduct(payload);
+    const sanitizedProduct = sanitizeProduct(product);
+
+    if (!sanitizedProduct) {
+      return null;
+    }
+
+    runInAction(() => {
+      this.remoteProducts.unshift(sanitizedProduct);
+    });
+
+    return sanitizedProduct;
+  }
+
+  async removeProduct(productId: string) {
     this.ensureHydrated();
-    this.customProducts = this.customProducts.filter(
-      (product) => product.id !== productId
+
+    const isRemoteProduct = this.remoteProducts.some(
+      (product) => product.id === productId
     );
-    this.persist();
+    const product = this.products.find((item) => item.id === productId);
+
+    if (isRemoteProduct && product?.sourceKey === CUSTOM_SOURCE_KEY) {
+      await ProductApi.removeProduct(productId);
+    }
+
+    runInAction(() => {
+      this.customProducts = this.customProducts.filter(
+        (item) => item.id !== productId
+      );
+      this.remoteProducts = this.remoteProducts.filter(
+        (item) => item.id !== productId
+      );
+      this.persist();
+    });
   }
 
   get products() {

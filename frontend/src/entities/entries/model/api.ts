@@ -16,24 +16,41 @@ type EntryApiResponse = {
 
 type FetchEntriesParams = {
   date?: string;
+  limit?: number;
+  offset?: number;
 };
 
 const buildEntriesEndpoint = (params?: FetchEntriesParams) => {
-  if (!params?.date) {
-    return "entries";
+  const searchParams = new URLSearchParams();
+
+  if (params?.date) {
+    searchParams.set("date", params.date);
   }
 
-  const searchParams = new URLSearchParams({
-    date: params.date,
-  });
+  if (params?.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
 
-  return `entries?${searchParams.toString()}`;
+  if (params?.offset !== undefined) {
+    searchParams.set("offset", String(params.offset));
+  }
+
+  const queryString = searchParams.toString();
+  return queryString ? `entries?${queryString}` : "entries";
 };
 
 export const EntriesApi = {
   async fetchEntries(params?: FetchEntriesParams): Promise<EntryApiEntry[]> {
     const response = await fetchFromApi<EntriesApiResponse>(
       buildEntriesEndpoint(params)
+    );
+
+    return response.data;
+  },
+
+  async fetchEntryById(id: string): Promise<EntryApiEntry> {
+    const response = await fetchFromApi<EntryApiResponse>(
+      `entries/${encodeURIComponent(id)}`
     );
 
     return response.data;
@@ -56,7 +73,7 @@ export const EntriesApi = {
     entryData: EntryApiPayload
   ): Promise<EntryApiEntry> {
     const response = await fetchFromApi<EntryApiResponse, EntryApiPayload>(
-      `entries/${id}`,
+      `entries/${encodeURIComponent(id)}`,
       {
         body: entryData,
         method: "PUT",
@@ -67,7 +84,7 @@ export const EntriesApi = {
   },
 
   async removeEntry(id: string): Promise<void> {
-    await fetchFromApi<void>(`entries/${id}`, {
+    await fetchFromApi<void>(`entries/${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
   },

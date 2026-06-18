@@ -1,11 +1,11 @@
-import recipeProducts from "../data/sources/recipe-products.json" with { type: "json" };
+import recipeProducts from "./data/sources/recipe-products.json" with { type: "json" };
 import type {
   ProductCategory,
   ProductDto,
   ProductSourceMeta,
+  ProductSourceRepository,
   ProductUnit,
-} from "../model/types.js";
-import type { ProductSourceRepository } from "./product-source.repository.js";
+} from "../domain/products.types.js";
 
 type RecipeProductRecord = {
   category: ProductCategory;

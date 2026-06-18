@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -24,7 +24,7 @@ export const DateStoreProvider = ({
 }: DateStoreProviderProps) => {
   const [store] = useState(() => createDateStore(initialDateKey));
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     store.hydrate();
   }, [store]);
 

@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -17,7 +17,7 @@ const DiaryEntriesContext = createContext<DiaryEntriesInstance | null>(null);
 export const DiaryEntriesProvider = ({ children }: PropsWithChildren) => {
   const [store] = useState(() => createDiaryEntriesStore());
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     store.hydrate();
   }, [store]);
 

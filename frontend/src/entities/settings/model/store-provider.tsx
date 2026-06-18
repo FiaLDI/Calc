@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -17,7 +17,7 @@ const SettingsStoreContext = createContext<SettingsStoreInstance | null>(null);
 export const SettingsStoreProvider = ({ children }: PropsWithChildren) => {
   const [store] = useState(() => createSettingsStore());
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     store.hydrate();
   }, [store]);
 

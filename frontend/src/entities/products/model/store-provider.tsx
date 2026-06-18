@@ -4,7 +4,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useLayoutEffect,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -18,7 +17,7 @@ const ProductsStoreContext = createContext<ProductsStoreInstance | null>(null);
 export const ProductStoreProvider = ({ children }: PropsWithChildren) => {
   const [store] = useState(() => createProductsStore());
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     store.hydrate();
   }, [store]);
 

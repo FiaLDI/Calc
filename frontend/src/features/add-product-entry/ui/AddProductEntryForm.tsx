@@ -1,4 +1,5 @@
-import { useState } from "react";
+"use client";
+import { useEffect, useState } from "react";
 
 import type { createDateStore } from "@/entities/date";
 import {
@@ -59,6 +60,16 @@ export const AddProductEntryForm = ({
     ? roundToOneDecimal(selectedProduct.fat * amountMultiplier)
     : 0;
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <form
       className="space-y-4"
@@ -69,7 +80,7 @@ export const AddProductEntryForm = ({
           return;
         }
 
-        diaryEntriesStore.addEntry(
+        void diaryEntriesStore.addEntry(
           selectedProduct,
           amountMultiplier,
           mealType,

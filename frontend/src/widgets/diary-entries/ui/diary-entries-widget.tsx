@@ -73,13 +73,14 @@ export const DiaryEntriesWidget = observer(() => {
                       const editMultiplier =
                         Number(editAmountValue) / editProduct.amountValue;
 
-                      diaryEntriesStore.updateEntry(
-                        entry.id,
-                        editProduct,
-                        editMultiplier,
-                        editMealType
-                      );
-                      setEditingEntryId("");
+                      void diaryEntriesStore
+                        .updateEntry(
+                          entry.id,
+                          editProduct,
+                          editMultiplier,
+                          editMealType
+                        )
+                        .then(() => setEditingEntryId(""));
                     }}
                   >
                     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_96px]">
@@ -236,7 +237,9 @@ export const DiaryEntriesWidget = observer(() => {
 
                         <button
                           type="button"
-                          onClick={() => diaryEntriesStore.removeEntry(entry.id)}
+                          onClick={() =>
+                            void diaryEntriesStore.removeEntry(entry.id)
+                          }
                           className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
                         >
                           Удалить
