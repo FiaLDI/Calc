@@ -10,6 +10,7 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductUnit = (typeof PRODUCT_UNITS)[number];
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+export type ProductVisibility = "private" | "public";
 
 export type Product = {
   id: string;
@@ -27,4 +28,5 @@ export type Product = {
   sourceKey: string;
   sourceLabel: string;
   isReadonly: boolean;
+  visibility: ProductVisibility;
 };

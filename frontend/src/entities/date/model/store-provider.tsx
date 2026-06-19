@@ -16,13 +16,15 @@ const DateStoreContext = createContext<DateStoreInstance | null>(null);
 
 type DateStoreProviderProps = PropsWithChildren<{
   initialDateKey: string;
+  userId: string;
 }>;
 
 export const DateStoreProvider = ({
   children,
   initialDateKey,
+  userId,
 }: DateStoreProviderProps) => {
-  const [store] = useState(() => createDateStore(initialDateKey));
+  const [store] = useState(() => createDateStore(userId, initialDateKey));
 
   useEffect(() => {
     store.hydrate();

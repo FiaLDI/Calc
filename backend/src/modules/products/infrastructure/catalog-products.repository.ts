@@ -56,6 +56,7 @@ export class CatalogProductsRepository implements ProductSourceRepository {
       protein: product.nutrition.proteins,
       sourceKey: META.key,
       sourceLabel: META.label,
+      visibility: "public" as const,
     }));
   }
 }

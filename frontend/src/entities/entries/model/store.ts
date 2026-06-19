@@ -32,8 +32,10 @@ class DiaryEntriesStore {
   isHydrated = false;
   isRemoteEntriesLoading = false;
   remoteEntriesError = "";
+  private readonly storageKey: string;
 
-  constructor() {
+  constructor(userId: string) {
+    this.storageKey = `${STORAGE_KEY}:${userId}`;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -43,7 +45,7 @@ class DiaryEntriesStore {
     }
 
     try {
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+      const rawState = window.localStorage.getItem(this.storageKey);
 
       if (!rawState) {
         return;
@@ -74,7 +76,7 @@ class DiaryEntriesStore {
       entries: this.entries,
     };
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(this.storageKey, JSON.stringify(snapshot));
   }
 
   ensureHydrated() {
@@ -109,7 +111,7 @@ class DiaryEntriesStore {
         this.remoteEntriesError =
           error instanceof Error
             ? error.message
-            : "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґРЅРµРІРЅРёРє.";
+            : "Неизвестная ошибка.";
       });
     } finally {
       runInAction(() => {
@@ -227,4 +229,5 @@ class DiaryEntriesStore {
   }
 }
 
-export const createDiaryEntriesStore = () => new DiaryEntriesStore();
+export const createDiaryEntriesStore = (userId: string) =>
+  new DiaryEntriesStore(userId);

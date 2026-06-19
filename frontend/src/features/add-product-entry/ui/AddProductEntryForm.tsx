@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { createDateStore } from "@/entities/date";
 import {
@@ -59,16 +59,6 @@ export const AddProductEntryForm = ({
   const previewFat = selectedProduct
     ? roundToOneDecimal(selectedProduct.fat * amountMultiplier)
     : 0;
-
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <form

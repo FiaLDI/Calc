@@ -14,8 +14,13 @@ export type DiaryEntriesInstance = ReturnType<typeof createDiaryEntriesStore>;
 
 const DiaryEntriesContext = createContext<DiaryEntriesInstance | null>(null);
 
-export const DiaryEntriesProvider = ({ children }: PropsWithChildren) => {
-  const [store] = useState(() => createDiaryEntriesStore());
+type DiaryEntriesProviderProps = PropsWithChildren<{ userId: string }>;
+
+export const DiaryEntriesProvider = ({
+  children,
+  userId,
+}: DiaryEntriesProviderProps) => {
+  const [store] = useState(() => createDiaryEntriesStore(userId));
 
   useEffect(() => {
     store.hydrate();

@@ -14,8 +14,13 @@ export type ProductsStoreInstance = ReturnType<typeof createProductsStore>;
 
 const ProductsStoreContext = createContext<ProductsStoreInstance | null>(null);
 
-export const ProductStoreProvider = ({ children }: PropsWithChildren) => {
-  const [store] = useState(() => createProductsStore());
+type ProductStoreProviderProps = PropsWithChildren<{ userId: string }>;
+
+export const ProductStoreProvider = ({
+  children,
+  userId,
+}: ProductStoreProviderProps) => {
+  const [store] = useState(() => createProductsStore(userId));
 
   useEffect(() => {
     store.hydrate();

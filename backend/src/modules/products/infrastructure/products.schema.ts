@@ -16,6 +16,7 @@ export type ProductRecord = {
   imageAlt: string;
   imageUrl: string;
   isReadonly: boolean;
+  isPublic: boolean;
   name: string;
   protein: number;
   sourceKey: string;
@@ -76,6 +77,12 @@ const productSchema = new mongoose.Schema<ProductRecord>(
     },
     isReadonly: {
       default: true,
+      required: true,
+      type: Boolean,
+    },
+    isPublic: {
+      default: false,
+      index: true,
       required: true,
       type: Boolean,
     },

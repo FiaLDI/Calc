@@ -29,8 +29,15 @@ const sortSourceKeys = (sourceKeys: string[]) => {
   return [...knownSourceKeys, ...unknownSourceKeys];
 };
 
-const getSourceKeysForQuery = async (sourceKeys: string[]) => {
-  const availableSourceKeys = await ProductModel.distinct("sourceKey").exec();
+const getAccessFilter = (userId: string) => ({
+  $or: [{ isReadonly: true }, { isPublic: true }, { userId }],
+});
+
+const getSourceKeysForQuery = async (sourceKeys: string[], userId: string) => {
+  const availableSourceKeys = await ProductModel.distinct(
+    "sourceKey",
+    getAccessFilter(userId)
+  ).exec();
 
   if (sourceKeys.length === 0) {
     return sortSourceKeys(availableSourceKeys);
@@ -48,12 +55,13 @@ export class ProductsRepository {
       ...payload,
       externalId: `custom:${userId}:${crypto.randomUUID()}`,
       isReadonly: false,
+      isPublic: payload.visibility === "public",
       sourceKey: "custom",
       sourceLabel: "Custom products",
       userId,
     });
 
-    return mapProductRecordToDto(product);
+    return mapProductRecordToDto(product, userId);
   }
 
   async deleteProduct(userId: string, productId: string) {
@@ -67,8 +75,11 @@ export class ProductsRepository {
   }
 
   async listProducts(query: ProductListQuery) {
-    const selectedSources = await getSourceKeysForQuery(query.sourceKeys);
-    const filter: Record<string, unknown> = {};
+    const selectedSources = await getSourceKeysForQuery(
+      query.sourceKeys,
+      query.userId
+    );
+    const filter: Record<string, unknown> = getAccessFilter(query.userId);
 
     if (selectedSources.length > 0) {
       filter.sourceKey = {
@@ -101,22 +112,26 @@ export class ProductsRepository {
     ]);
 
     return {
-      items: products.map(mapProductRecordToDto),
+      items: products.map((product) => mapProductRecordToDto(product, query.userId)),
       selectedSources,
       total,
     };
   }
 
-  async getProductById(productId: string) {
+  async getProductById(userId: string, productId: string) {
     const product = await ProductModel.findOne({
+      ...getAccessFilter(userId),
       externalId: productId,
     }).exec();
 
-    return product ? mapProductRecordToDto(product) : null;
+    return product ? mapProductRecordToDto(product, userId) : null;
   }
 
-  async listSources() {
-    const sourceKeys = await ProductModel.distinct("sourceKey").exec();
+  async listSources(userId: string) {
+    const sourceKeys = await ProductModel.distinct(
+      "sourceKey",
+      getAccessFilter(userId)
+    ).exec();
     return sortSourceKeys(sourceKeys).map(getProductSourceMeta);
   }
 }

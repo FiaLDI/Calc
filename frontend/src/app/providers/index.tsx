@@ -1,8 +1,9 @@
 import type { PropsWithChildren } from "react";
 
+import { AuthStoreProvider } from "@/entities/auth";
 import { ModalProvider } from "@/shared/ui/modal";
 
-import { StoreProvider } from "./store.provider";
+import { AuthBoundary } from "./auth-boundary";
 
 type AppProvidersProps = PropsWithChildren<{
   initialDateKey: string;
@@ -13,8 +14,10 @@ export const AppProviders = ({
   initialDateKey,
 }: AppProvidersProps) => {
   return (
-    <StoreProvider initialDateKey={initialDateKey}>
-      <ModalProvider>{children}</ModalProvider>
-    </StoreProvider>
+    <AuthStoreProvider>
+      <AuthBoundary initialDateKey={initialDateKey}>
+        <ModalProvider>{children}</ModalProvider>
+      </AuthBoundary>
+    </AuthStoreProvider>
   );
 };

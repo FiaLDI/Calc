@@ -1,6 +1,16 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api/v1";
 
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 const joinUrl = (baseUrl: string, endpoint: string) => {
     return `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
 };
@@ -31,7 +41,19 @@ export const fetchFromApi = async <TResponse, TBody = undefined>(
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
+    const payload = (await response.json().catch(() => null)) as {
+      error?: unknown;
+    } | null;
+    const message =
+      typeof payload?.error === "string"
+        ? payload.error
+        : `Ошибка API: ${response.status} ${response.statusText}`;
+
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("calc:unauthorized"));
+    }
+
+    throw new ApiError(response.status, message);
   }
 
   if (response.status === 204) {

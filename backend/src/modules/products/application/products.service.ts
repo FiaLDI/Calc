@@ -12,8 +12,8 @@ export class ProductsService {
     return this.productsRepository.listProducts(query);
   }
 
-  async getProductById(productId: string) {
-    return this.productsRepository.getProductById(productId);
+  async getProductById(userId: string, productId: string) {
+    return this.productsRepository.getProductById(userId, productId);
   }
 
   async createProduct(userId: string, payload: ProductCreatePayload) {
@@ -31,7 +31,7 @@ export class ProductsService {
     }
   }
 
-  listSources() {
-    return this.productsRepository.listSources();
+  listSources(userId: string) {
+    return this.productsRepository.listSources(userId);
   }
 }

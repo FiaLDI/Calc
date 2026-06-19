@@ -50,6 +50,7 @@ export class WarehouseProductsRepository implements ProductSourceRepository {
       protein: product.proteinGrams,
       sourceKey: META.key,
       sourceLabel: META.label,
+      visibility: "public" as const,
     }));
   }
 }

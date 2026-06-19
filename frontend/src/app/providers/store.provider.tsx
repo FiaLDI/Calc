@@ -8,17 +8,19 @@ import type { PropsWithChildren } from "react";
 
 type StoreProviderProps = PropsWithChildren<{
   initialDateKey: string;
+  userId: string;
 }>;
 
 export const StoreProvider = ({
   children,
   initialDateKey,
+  userId,
 }: StoreProviderProps) => {
   return (
-    <SettingsStoreProvider>
-      <DateStoreProvider initialDateKey={initialDateKey}>
-        <ProductStoreProvider>
-          <DiaryEntriesProvider>
+    <SettingsStoreProvider userId={userId}>
+      <DateStoreProvider initialDateKey={initialDateKey} userId={userId}>
+        <ProductStoreProvider userId={userId}>
+          <DiaryEntriesProvider userId={userId}>
             {children}
           </DiaryEntriesProvider>
         </ProductStoreProvider>

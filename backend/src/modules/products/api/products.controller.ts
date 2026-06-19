@@ -34,6 +34,7 @@ export class ProductsController {
         getSingleQueryValue(request.query.search) ||
         getSingleQueryValue(request.query.q),
       sourceKeys: getStringListQuery(request.query.sources || request.query.source),
+      userId: getRequestUserId(request),
     };
 
     const result = await this.productsService.listProducts(query);
@@ -54,7 +55,10 @@ export class ProductsController {
     request: Request<{ id: string }>,
     response: Response<ProductResponse>
   ) => {
-    const product = await this.productsService.getProductById(request.params.id);
+    const product = await this.productsService.getProductById(
+      getRequestUserId(request),
+      request.params.id
+    );
 
     if (!product) {
       throw new HttpError(404, "Product not found.");
@@ -89,11 +93,11 @@ export class ProductsController {
   };
 
   getSources = async (
-    _request: Request,
+    request: Request,
     response: Response<ProductSourcesResponse>
   ) => {
     response.json({
-      data: await this.productsService.listSources(),
+      data: await this.productsService.listSources(getRequestUserId(request)),
     });
   };
 }

@@ -14,8 +14,13 @@ export type SettingsStoreInstance = ReturnType<typeof createSettingsStore>;
 
 const SettingsStoreContext = createContext<SettingsStoreInstance | null>(null);
 
-export const SettingsStoreProvider = ({ children }: PropsWithChildren) => {
-  const [store] = useState(() => createSettingsStore());
+type SettingsStoreProviderProps = PropsWithChildren<{ userId: string }>;
+
+export const SettingsStoreProvider = ({
+  children,
+  userId,
+}: SettingsStoreProviderProps) => {
+  const [store] = useState(() => createSettingsStore(userId));
 
   useEffect(() => {
     store.hydrate();

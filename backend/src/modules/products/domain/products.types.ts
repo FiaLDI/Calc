@@ -1,15 +1,16 @@
-export const PRODUCT_UNITS = ["Рі", "РјР»", "С€С‚", "РїРѕСЂС†РёСЏ"] as const;
+export const PRODUCT_UNITS = ["г", "мл", "шт", "порция"] as const;
 export const PRODUCT_CATEGORIES = [
-  "РљСЂСѓРїС‹",
-  "РњРѕР»РѕС‡РЅС‹Рµ",
-  "Р¤СЂСѓРєС‚С‹",
-  "РћСЂРµС…Рё Рё РїР°СЃС‚С‹",
-  "Р“РѕС‚РѕРІС‹Рµ Р±Р»СЋРґР°",
-  "Р”СЂСѓРіРѕРµ",
+  "Крупы",
+  "Молочные",
+  "Фрукты",
+  "Орехи и пасты",
+  "Готовые блюда",
+  "Другое",
 ] as const;
 
 export type ProductUnit = (typeof PRODUCT_UNITS)[number];
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+export type ProductVisibility = "private" | "public";
 
 export type ProductDto = {
   amountUnit: ProductUnit;
@@ -27,6 +28,7 @@ export type ProductDto = {
   protein: number;
   sourceKey: string;
   sourceLabel: string;
+  visibility: ProductVisibility;
 };
 
 export type ProductCreatePayload = {
@@ -40,6 +42,7 @@ export type ProductCreatePayload = {
   imageUrl: string;
   name: string;
   protein: number;
+  visibility: ProductVisibility;
 };
 
 export type ProductSourceMeta = {
@@ -56,13 +59,13 @@ export interface ProductSourceRepository {
 export interface ProductsRepositoryContract {
   createProduct(userId: string, payload: ProductCreatePayload): Promise<ProductDto>;
   deleteProduct(userId: string, productId: string): Promise<boolean>;
-  getProductById(productId: string): Promise<ProductDto | null>;
+  getProductById(userId: string, productId: string): Promise<ProductDto | null>;
   listProducts(query: ProductListQuery): Promise<{
     items: ProductDto[];
     selectedSources: string[];
     total: number;
   }>;
-  listSources(): Promise<ProductSourceMeta[]>;
+  listSources(userId: string): Promise<ProductSourceMeta[]>;
 }
 
 export type ProductListQuery = {
@@ -70,6 +73,7 @@ export type ProductListQuery = {
   offset: number;
   search: string;
   sourceKeys: string[];
+  userId: string;
 };
 
 export type ProductsListResponse = {

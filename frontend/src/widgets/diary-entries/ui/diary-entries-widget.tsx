@@ -28,16 +28,16 @@ export const DiaryEntriesWidget = observer(() => {
   const [editMealType, setEditMealType] = useState<MealType>("Завтрак");
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col rounded-4xl bg-white p-6 shadow-xl">
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
+    <section className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-4xl bg-white p-4 shadow-xl sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <p className="text-sm text-zinc-400">Дневник питания</p>
           <h2 className="text-2xl font-bold">
             {formatLongDay(dateStore.selectedDate)}
           </h2>
         </div>
 
-        <div className="rounded-2xl bg-zinc-100 px-4 py-2 text-right">
+        <div className="w-fit shrink-0 rounded-2xl bg-zinc-100 px-4 py-2 text-left sm:text-right">
           <p className="text-xs text-zinc-400">Всего</p>
           <p className="font-bold">{selectedDayTotals.calories} ккал</p>
         </div>
@@ -49,14 +49,14 @@ export const DiaryEntriesWidget = observer(() => {
           обновится автоматически.
         </div>
       ) : (
-        <div className="min-h-0 flex-1 space-y-3 overflow-auto pr-1">
+        <div className="min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-1">
           {entries.map((entry) => {
             const isEditing = editingEntryId === entry.id;
 
             return (
               <div
                 key={entry.id}
-                className="rounded-3xl border border-zinc-100 bg-zinc-50 p-3 transition hover:bg-white hover:shadow-md"
+                className="min-w-0 max-w-full rounded-3xl border border-zinc-100 bg-zinc-50 p-3 transition hover:bg-white hover:shadow-md"
               >
                 {isEditing ? (
                   <form
@@ -173,8 +173,8 @@ export const DiaryEntriesWidget = observer(() => {
                   </form>
                 ) : (
                   <>
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
+                    <div className="mb-2 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 max-w-full items-start gap-3">
                         {entry.productImageUrl ? (
                           <Image
                             src={entry.productImageUrl}
@@ -193,7 +193,7 @@ export const DiaryEntriesWidget = observer(() => {
                           <p className="text-xs text-zinc-400">
                             {entry.mealType}
                           </p>
-                          <h3 className="font-semibold text-zinc-900">
+                          <h3 className="break-words font-semibold text-zinc-900">
                             {entry.productName}
                           </h3>
                           <p className="text-xs text-zinc-500">
@@ -204,8 +204,8 @@ export const DiaryEntriesWidget = observer(() => {
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 items-start gap-2">
-                        <div className="text-right">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+                        <div className="mr-auto sm:mr-0 sm:text-right">
                           <p className="font-semibold">{entry.calories} ккал</p>
                         </div>
 
@@ -265,6 +265,6 @@ export const DiaryEntriesWidget = observer(() => {
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 });

@@ -14,6 +14,20 @@ const getString = (payload: Record<string, unknown>, key: string) => {
   return value.trim();
 };
 
+const getOptionalString = (payload: Record<string, unknown>, key: string) => {
+  const value = payload[key];
+
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  if (typeof value !== "string") {
+    throw new HttpError(400, `${key} must be a string.`);
+  }
+
+  return value.trim();
+};
+
 const getNumber = (payload: Record<string, unknown>, key: string) => {
   const value = payload[key];
 
@@ -30,6 +44,7 @@ export const parseEntryPayload = (value: unknown): EntryPayload => {
   }
 
   const mealType = getString(value, "mealType");
+  const productName = getString(value, "productName");
 
   return {
     amountUnit: getString(value, "amountUnit") as EntryPayload["amountUnit"],
@@ -40,9 +55,9 @@ export const parseEntryPayload = (value: unknown): EntryPayload => {
     fat: getNumber(value, "fat"),
     mealType: mealType as EntryPayload["mealType"],
     productId: getString(value, "productId"),
-    productImageAlt: getString(value, "productImageAlt"),
-    productImageUrl: getString(value, "productImageUrl"),
-    productName: getString(value, "productName"),
+    productImageAlt: getOptionalString(value, "productImageAlt") || productName,
+    productImageUrl: getOptionalString(value, "productImageUrl"),
+    productName,
     protein: getNumber(value, "protein"),
     servings: getNumber(value, "servings"),
   };

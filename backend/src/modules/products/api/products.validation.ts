@@ -38,6 +38,18 @@ const getNumber = (payload: Record<string, unknown>, key: string) => {
   return value;
 };
 
+const getVisibility = (
+  payload: Record<string, unknown>
+): ProductCreatePayload["visibility"] => {
+  const value = payload.visibility;
+
+  if (value !== "private" && value !== "public") {
+    throw new HttpError(400, "visibility must be either private or public.");
+  }
+
+  return value;
+};
+
 export const parseProductCreatePayload = (
   value: unknown
 ): ProductCreatePayload => {
@@ -58,5 +70,6 @@ export const parseProductCreatePayload = (
     imageUrl: getOptionalString(value, "imageUrl"),
     name,
     protein: getNumber(value, "protein"),
+    visibility: getVisibility(value),
   };
 };

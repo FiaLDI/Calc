@@ -7,6 +7,7 @@ import {
   PRODUCT_UNITS,
   type ProductCategory,
   type ProductUnit,
+  type ProductVisibility,
   useProductsStore,
 } from "@/entities/products";
 import { uploadImageToCdn } from "@/shared/api/cdn";
@@ -21,6 +22,7 @@ type ProductFormState = {
   imageUrl: string;
   name: string;
   protein: string;
+  visibility: ProductVisibility;
 };
 
 type AddProductFormProps = {
@@ -39,6 +41,7 @@ const initialFormState: ProductFormState = {
   imageUrl: "",
   name: "",
   protein: "",
+  visibility: "private",
 };
 
 export const AddProductForm = ({
@@ -83,6 +86,7 @@ export const AddProductForm = ({
               imageUrl,
               name: formState.name,
               protein: Number(formState.protein),
+              visibility: formState.visibility,
             });
 
             setFormState(initialFormState);
@@ -137,6 +141,42 @@ export const AddProductForm = ({
           ))}
         </select>
       </div>
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-zinc-600">
+          Кто увидит продукт
+        </legend>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            ["private", "Только я"],
+            ["public", "Все пользователи"],
+          ] as const).map(([visibility, label]) => (
+            <label
+              className={`cursor-pointer rounded-2xl border px-4 py-3 text-sm transition ${
+                formState.visibility === visibility
+                  ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-600"
+              }`}
+              key={visibility}
+            >
+              <input
+                checked={formState.visibility === visibility}
+                className="sr-only"
+                name="visibility"
+                onChange={() =>
+                  setFormState((currentState) => ({
+                    ...currentState,
+                    visibility,
+                  }))
+                }
+                type="radio"
+                value={visibility}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="grid grid-cols-[1fr_112px] gap-3">
         <div>

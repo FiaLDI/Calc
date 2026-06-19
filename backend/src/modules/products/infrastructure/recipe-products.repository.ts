@@ -52,6 +52,7 @@ export class RecipeProductsRepository implements ProductSourceRepository {
       protein: product.macrosPerPortion.protein,
       sourceKey: META.key,
       sourceLabel: META.label,
+      visibility: "public" as const,
     }));
   }
 }

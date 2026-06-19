@@ -31,8 +31,10 @@ class ProductsStore {
   isHydrated = false;
   isRemoteProductsLoading = false;
   remoteProductsError = "";
+  private readonly storageKey: string;
 
-  constructor() {
+  constructor(userId: string) {
+    this.storageKey = `${STORAGE_KEY}:${userId}`;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -42,7 +44,7 @@ class ProductsStore {
     }
 
     try {
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+      const rawState = window.localStorage.getItem(this.storageKey);
 
       if (!rawState) {
         return;
@@ -71,7 +73,7 @@ class ProductsStore {
       products: this.customProducts,
     };
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(this.storageKey, JSON.stringify(snapshot));
   }
 
   async loadRemoteProducts() {
@@ -139,6 +141,7 @@ class ProductsStore {
       imageUrl: draft.imageUrl.trim(),
       name,
       protein: normalizeNonNegative(draft.protein),
+      visibility: draft.visibility === "public" ? "public" : "private",
     };
   }
 
@@ -200,4 +203,4 @@ class ProductsStore {
   }
 }
 
-export const createProductsStore = () => new ProductsStore();
+export const createProductsStore = (userId: string) => new ProductsStore(userId);

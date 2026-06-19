@@ -42,6 +42,7 @@ export const seedProducts = async () => {
             imageAlt: product.imageAlt,
             imageUrl: product.imageUrl,
             isReadonly: product.isReadonly,
+            isPublic: true,
             name: product.name,
             protein: product.protein,
             sourceKey: product.sourceKey,

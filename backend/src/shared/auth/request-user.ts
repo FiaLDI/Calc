@@ -1,3 +1,17 @@
 import type { Request } from "express";
 
-export const getRequestUserId = (_request: Request) => "local-user";
+import { HttpError } from "../http/http-error.js";
+
+type AuthenticatedRequest = Request & {
+  userId?: string;
+};
+
+export const getRequestUserId = (request: Request) => {
+  const userId = (request as AuthenticatedRequest).userId;
+
+  if (!userId) {
+    throw new HttpError(401, "Authentication required.");
+  }
+
+  return userId;
+};

@@ -69,5 +69,9 @@ export const sanitizeProduct = (value: unknown): Product | null => {
         ? candidate.sourceLabel
         : CUSTOM_SOURCE_LABEL,
     isReadonly: candidate.isReadonly === true,
+    visibility:
+      candidate.visibility === "public" || candidate.isReadonly === true
+        ? "public"
+        : "private",
   };
 };
