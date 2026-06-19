@@ -36,6 +36,10 @@ app.use(
   })
 );
 
+app.get("/health", (_request, response) => {
+  response.json({ status: "ok" });
+});
+
 app.use("/images", express.static(uploadDir));
 
 app.post(

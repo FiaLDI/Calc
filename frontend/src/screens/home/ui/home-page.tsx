@@ -2,8 +2,6 @@
 
 import { observer } from "mobx-react-lite";
 
-import { useAuthStore } from "@/entities/auth";
-import { UserProfile } from "@/features/user-profile";
 import { CalorieSummaryWidget } from "@/widgets/calorie-summary";
 import { DayCalendarWidget } from "@/widgets/day-calendar";
 import { DiaryAdder } from "@/widgets/diary-adder";
@@ -12,7 +10,6 @@ import { WeeklyKbjuWidget } from "@/widgets/weekly-kbju";
 import { Header } from "@/widgets/header";
 
 export const HomePage = observer(() => {
-
   return (
     <div className="mx-auto min-h-screen w-full max-w-7xl overflow-x-clip px-3 py-4 sm:px-6 sm:py-6">
       <Header />

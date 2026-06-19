@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     dangerouslyAllowLocalIP: true,
+    unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true",
     remotePatterns: [
       {
         protocol: "http",

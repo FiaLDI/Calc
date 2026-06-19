@@ -1,7 +1,11 @@
+"use client";
+
+import { observer } from "mobx-react-lite";
+
 import { useAuthStore } from "@/entities/auth";
 import { UserProfile } from "@/features/user-profile";
 
-export const Header = () => {
+export const Header = observer(() => {
   const authStore = useAuthStore();
 
     return (
@@ -29,5 +33,5 @@ export const Header = () => {
           </button>
         </div>
       </header>
-    )
-}
+    );
+});
