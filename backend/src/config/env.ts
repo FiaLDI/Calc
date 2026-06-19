@@ -30,9 +30,15 @@ const getJwtToken = () => {
   return value;
 };
 
+const frontendOrigin =
+  process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+
 export const env = {
-  frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:3000",
-  isProduction: process.env.NODE_ENV === "production",
+  cookieSecure:
+    process.env.COOKIE_SECURE === undefined
+      ? frontendOrigin.startsWith("https://")
+      : process.env.COOKIE_SECURE === "true",
+  frontendOrigin,
   jwtToken: getJwtToken(),
   mongo: {
     dbName: process.env.MONGO_DB_NAME || "calc",

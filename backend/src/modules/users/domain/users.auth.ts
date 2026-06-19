@@ -10,12 +10,12 @@ export const getAuthCookieOptions = (): CookieOptions => ({
   maxAge: AUTH_TOKEN_TTL_SECONDS * 1000,
   path: "/",
   sameSite: "lax",
-  secure: env.isProduction,
+  secure: env.cookieSecure,
 });
 
 export const getAuthCookieClearOptions = (): CookieOptions => ({
   httpOnly: true,
   path: "/",
   sameSite: "lax",
-  secure: env.isProduction,
+  secure: env.cookieSecure,
 });
