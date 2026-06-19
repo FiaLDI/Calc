@@ -57,8 +57,8 @@ export const FindProductForm = ({
         onClose={productPickerModal.close}
       >
         <div className="border-b border-zinc-100 p-4 sm:p-5">
-          <div className="mb-4 flex items-start justify-between gap-4">
-            <div>
+          <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0">
               <p className="text-sm text-zinc-400">Каталог продуктов</p>
               <h3 id="product-picker-title" className="text-2xl font-bold">
                 Выбрать продукт
@@ -69,7 +69,7 @@ export const FindProductForm = ({
               </p>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
               <button
                 type="button"
                 onClick={addProductModal.open}

@@ -91,7 +91,7 @@ export const SetSettingsModal = ({ settingsStore }: SetSettingsModalProps) => {
               <span className="mb-2 block text-sm font-medium text-zinc-600">
                 Цель
               </span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid gap-2 sm:grid-cols-3">
                 {NUTRITION_GOALS.map((goal) => {
                   const isActive = formState.goal === goal;
 

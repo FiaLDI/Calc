@@ -41,7 +41,7 @@ export const ProductLibraryWidget = observer(() => {
   };
 
   return (
-    <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-4xl bg-white p-4 shadow-xl sm:p-6">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-zinc-400">База продуктов</p>

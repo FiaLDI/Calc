@@ -23,17 +23,17 @@ export const ProductCard = ({
           alt={product.imageAlt}
           width={80}
           height={80}
-          className="h-20 w-20 shrink-0 rounded-2xl object-cover"
+          className="h-16 w-16 shrink-0 rounded-2xl object-cover sm:h-20 sm:w-20"
         />
       ) : (
-        <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-bold text-emerald-700">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-bold text-emerald-700 sm:h-20 sm:w-20">
           {product.name.slice(0, 1).toUpperCase()}
         </span>
       )}
 
       <span className="min-w-0 flex-1">
         <span className="mb-1 flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-zinc-900">{product.name}</span>
+          <span className="break-words font-semibold text-zinc-900">{product.name}</span>
           {isSelected ? (
             <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-semibold text-white">
               Выбран
@@ -46,7 +46,7 @@ export const ProductCard = ({
           ) : null}
         </span>
 
-        <span className="block text-xs text-zinc-500">
+        <span className="block break-words text-xs text-zinc-500">
           {product.category} · {product.sourceLabel}
         </span>
         <span className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
@@ -69,7 +69,7 @@ export const ProductCard = ({
 
   return (
     <div
-      className={`rounded-3xl border p-3 transition ${
+      className={`min-w-0 max-w-full overflow-hidden rounded-3xl border p-3 transition ${
         isSelected
           ? "border-emerald-300 bg-emerald-50 shadow-md"
           : "border-zinc-100 bg-zinc-50 hover:border-emerald-200 hover:bg-white hover:shadow-md"
@@ -79,12 +79,12 @@ export const ProductCard = ({
         <button
           type="button"
           onClick={() => onSelect(product.id)}
-          className="flex min-h-[88px] w-full items-start gap-3 text-left"
+          className="flex min-h-[72px] min-w-0 w-full items-start gap-3 text-left sm:min-h-[88px]"
         >
           {content}
         </button>
       ) : (
-        <div className="flex min-h-[88px] w-full items-start gap-3 text-left">
+        <div className="flex min-h-[72px] min-w-0 w-full items-start gap-3 text-left sm:min-h-[88px]">
           {content}
         </div>
       )}

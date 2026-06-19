@@ -146,7 +146,7 @@ export const AddProductForm = ({
         <legend className="mb-2 text-sm font-medium text-zinc-600">
           Кто увидит продукт
         </legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {([
             ["private", "Только я"],
             ["public", "Все пользователи"],
@@ -178,8 +178,8 @@ export const AddProductForm = ({
         </div>
       </fieldset>
 
-      <div className="grid grid-cols-[1fr_112px] gap-3">
-        <div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
+        <div className="min-w-0">
           <label className="mb-1 block text-sm font-medium text-zinc-600">
             Portion
           </label>
@@ -198,7 +198,7 @@ export const AddProductForm = ({
           />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 block text-sm font-medium text-zinc-600">
             Unit
           </label>
@@ -270,8 +270,8 @@ export const AddProductForm = ({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+        <div className="min-w-0">
           <label className="mb-1 block text-xs font-medium text-zinc-500">
             Protein
           </label>
@@ -291,7 +291,7 @@ export const AddProductForm = ({
           />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 block text-xs font-medium text-zinc-500">
             Carbs
           </label>
@@ -311,7 +311,7 @@ export const AddProductForm = ({
           />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 block text-xs font-medium text-zinc-500">
             Fat
           </label>
@@ -365,7 +365,7 @@ export const AddProductForm = ({
   }
 
   return (
-    <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-4xl bg-white p-4 shadow-xl sm:p-6">
       <div className="mb-5">
         <p className="text-sm text-zinc-400">New product</p>
         <h2 className="text-2xl font-bold">Add to database</h2>

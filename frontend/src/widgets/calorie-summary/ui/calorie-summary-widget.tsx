@@ -44,7 +44,7 @@ export const CalorieSummaryWidget = observer(() => {
   ];
 
   return (
-    <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-4xl bg-white p-4 shadow-xl sm:p-6">
       <div className="relative mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm text-zinc-400">Калории за день</p>
