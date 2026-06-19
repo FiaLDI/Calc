@@ -125,8 +125,8 @@ export const AddProductEntryForm = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <div className="min-w-0">
           <label className="mb-1 block text-sm font-medium text-zinc-600">
             Количество
           </label>
@@ -152,7 +152,7 @@ export const AddProductEntryForm = ({
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="mb-1 block text-sm font-medium text-zinc-600">
             Прием пищи
           </label>
@@ -178,7 +178,7 @@ export const AddProductEntryForm = ({
 
         {selectedProduct ? (
           <>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 {selectedProduct.imageUrl ? (
                   <Image
@@ -210,7 +210,7 @@ export const AddProductEntryForm = ({
                 </div>
               </div>
 
-              <div className="text-right">
+              <div className="shrink-0 sm:text-right">
                 <p className="font-bold text-zinc-900">{previewCalories}</p>
                 <p className="text-xs text-zinc-500">ккал</p>
               </div>

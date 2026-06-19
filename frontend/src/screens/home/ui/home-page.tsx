@@ -14,8 +14,8 @@ export const HomePage = observer(() => {
     <div className="mx-auto min-h-screen w-full max-w-7xl overflow-x-clip px-3 py-4 sm:px-6 sm:py-6">
       <Header />
 
-      <div className="grid gap-4 xl:h-[calc(100vh-8rem)] xl:min-h-[720px] xl:grid-cols-[320px_minmax(0,1fr)]">
-        <div className="grid min-w-0 gap-4 self-start">
+      <div className="grid w-full min-w-0 max-w-full gap-4 overflow-x-clip xl:h-[calc(100vh-8rem)] xl:min-h-[720px] xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="grid w-full min-w-0 max-w-full gap-4 self-start overflow-hidden">
           <CalorieSummaryWidget />
           <DayCalendarWidget />
           <DiaryAdder />

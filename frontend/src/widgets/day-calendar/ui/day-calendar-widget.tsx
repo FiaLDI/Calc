@@ -16,7 +16,7 @@ export const DayCalendarWidget = observer(() => {
   }, []);
 
   return (
-    <div className="w-full rounded-4xl bg-white p-5 shadow-xl">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-4xl bg-white p-4 shadow-xl sm:p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold">Выберите день</h2>
@@ -73,7 +73,7 @@ export const DayCalendarWidget = observer(() => {
               >
                 {day.shortLabel}
               </p>
-              <p className="mt-1 text-sm font-bold">{day.longLabel}</p>
+              <p className="mt-1 break-words text-sm font-bold">{day.longLabel}</p>
             </button>
           );
         })}
