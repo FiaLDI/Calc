@@ -1,25 +1,31 @@
+"use client";
+
+import { observer } from "mobx-react-lite";
 
 import { CalorieSummaryWidget } from "@/widgets/calorie-summary";
 import { DayCalendarWidget } from "@/widgets/day-calendar";
 import { DiaryAdder } from "@/widgets/diary-adder";
 import { DiaryEntriesWidget } from "@/widgets/diary-entries";
 import { WeeklyKbjuWidget } from "@/widgets/weekly-kbju";
+import { Header } from "@/widgets/header";
 
-export const HomePage = () => {
+export const HomePage = observer(() => {
   return (
-    <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 sm:px-6">
-      <div className="grid h-[calc(100vh-3rem)] min-h-[720px] gap-4 2xl:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="mx-auto min-h-screen w-full max-w-7xl overflow-x-clip px-3 py-4 sm:px-6 sm:py-6">
+      <Header />
+
+      <div className="grid gap-4 xl:h-[calc(100vh-8rem)] xl:min-h-[720px] xl:grid-cols-[320px_minmax(0,1fr)]">
         <div className="grid min-w-0 gap-4 self-start">
           <CalorieSummaryWidget />
           <DayCalendarWidget />
           <DiaryAdder />
         </div>
 
-        <div className="grid h-full min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4">
+        <div className="grid w-full min-w-0 max-w-full gap-4 overflow-hidden xl:h-full xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
           <DiaryEntriesWidget />
           <WeeklyKbjuWidget />
         </div>
       </div>
     </div>
   );
-};
+});

@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { useDateStore } from "@/entities/date";
+import { MEAL_TYPES, type MealType, useDiaryEntriesStore } from "@/entities/entries";
+import { useProductsStore } from "@/entities/products";
+import { formatLongDay } from "@/shared/lib/format";
 import { observer } from "mobx-react-lite";
 import Image from "next/image";
 
-import { useDateStore } from "@/entities/date";
-import { MEAL_TYPES, type MealType, useProductsStore } from "@/entities/products";
-import { formatLongDay } from "@/shared/lib/format";
-
 export const DiaryEntriesWidget = observer(() => {
   const productsStore = useProductsStore();
+  const diaryEntriesStore = useDiaryEntriesStore();
   const dateStore = useDateStore();
-  const entries = productsStore.selectedEntries(dateStore.selectedDate);
+  const entries = diaryEntriesStore.selectedEntries(dateStore.selectedDate);
   const products = productsStore.products;
-  const selectedDayTotals = productsStore.selectedDayTotals(
+  const productsById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products]
+  );
+  const selectedDayTotals = diaryEntriesStore.selectedDayTotals(
     dateStore.selectedDate
   );
   const [editingEntryId, setEditingEntryId] = useState("");
@@ -23,16 +28,16 @@ export const DiaryEntriesWidget = observer(() => {
   const [editMealType, setEditMealType] = useState<MealType>("Завтрак");
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col rounded-4xl bg-white p-6 shadow-xl">
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
+    <section className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-4xl bg-white p-4 shadow-xl sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <p className="text-sm text-zinc-400">Дневник питания</p>
           <h2 className="text-2xl font-bold">
             {formatLongDay(dateStore.selectedDate)}
           </h2>
         </div>
 
-        <div className="rounded-2xl bg-zinc-100 px-4 py-2 text-right">
+        <div className="w-fit shrink-0 rounded-2xl bg-zinc-100 px-4 py-2 text-left sm:text-right">
           <p className="text-xs text-zinc-400">Всего</p>
           <p className="font-bold">{selectedDayTotals.calories} ккал</p>
         </div>
@@ -44,14 +49,14 @@ export const DiaryEntriesWidget = observer(() => {
           обновится автоматически.
         </div>
       ) : (
-        <div className="min-h-0 flex-1 space-y-3 overflow-auto pr-1">
+        <div className="min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden pr-1">
           {entries.map((entry) => {
             const isEditing = editingEntryId === entry.id;
 
             return (
               <div
                 key={entry.id}
-                className="rounded-3xl border border-zinc-100 bg-zinc-50 p-3 transition hover:bg-white hover:shadow-md"
+                className="min-w-0 max-w-full rounded-3xl border border-zinc-100 bg-zinc-50 p-3 transition hover:bg-white hover:shadow-md"
               >
                 {isEditing ? (
                   <form
@@ -59,24 +64,23 @@ export const DiaryEntriesWidget = observer(() => {
                     onSubmit={(event) => {
                       event.preventDefault();
 
-                      if (!editProductId) {
+                      const editProduct = productsById.get(editProductId);
+
+                      if (!editProduct) {
                         return;
                       }
 
-                      const editProduct = products.find(
-                        (product) => product.id === editProductId
-                      );
-                      const editMultiplier = editProduct
-                        ? Number(editAmountValue) / editProduct.amountValue
-                        : Number(editAmountValue);
+                      const editMultiplier =
+                        Number(editAmountValue) / editProduct.amountValue;
 
-                      productsStore.updateEntry(
-                        entry.id,
-                        editProductId,
-                        editMultiplier,
-                        editMealType
-                      );
-                      setEditingEntryId("");
+                      void diaryEntriesStore
+                        .updateEntry(
+                          entry.id,
+                          editProduct,
+                          editMultiplier,
+                          editMealType
+                        )
+                        .then(() => setEditingEntryId(""));
                     }}
                   >
                     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_96px]">
@@ -88,9 +92,7 @@ export const DiaryEntriesWidget = observer(() => {
                           value={editProductId}
                           onChange={(event) => {
                             const nextProductId = event.target.value;
-                            const nextProduct = products.find(
-                              (product) => product.id === nextProductId
-                            );
+                            const nextProduct = productsById.get(nextProductId);
 
                             setEditProductId(nextProductId);
 
@@ -126,9 +128,8 @@ export const DiaryEntriesWidget = observer(() => {
                             className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-400"
                           />
                           <div className="flex items-center justify-center rounded-2xl bg-zinc-100 text-xs font-semibold text-zinc-600">
-                            {products.find(
-                              (product) => product.id === editProductId
-                            )?.amountUnit || entry.amountUnit}
+                            {productsById.get(editProductId)?.amountUnit ||
+                              entry.amountUnit}
                           </div>
                         </div>
                       </div>
@@ -172,8 +173,8 @@ export const DiaryEntriesWidget = observer(() => {
                   </form>
                 ) : (
                   <>
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
+                    <div className="mb-2 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 max-w-full items-start gap-3">
                         {entry.productImageUrl ? (
                           <Image
                             src={entry.productImageUrl}
@@ -192,7 +193,7 @@ export const DiaryEntriesWidget = observer(() => {
                           <p className="text-xs text-zinc-400">
                             {entry.mealType}
                           </p>
-                          <h3 className="font-semibold text-zinc-900">
+                          <h3 className="break-words font-semibold text-zinc-900">
                             {entry.productName}
                           </h3>
                           <p className="text-xs text-zinc-500">
@@ -203,24 +204,23 @@ export const DiaryEntriesWidget = observer(() => {
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 items-start gap-2">
-                        <div className="text-right">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+                        <div className="mr-auto sm:mr-0 sm:text-right">
                           <p className="font-semibold">{entry.calories} ккал</p>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => {
-                            const productExists = products.some(
-                              (product) => product.id === entry.productId
-                            );
+                            const fallbackProductId = products[0]?.id || "";
+                            const editableProductId = productsById.has(
+                              entry.productId
+                            )
+                              ? entry.productId
+                              : fallbackProductId;
 
                             setEditingEntryId(entry.id);
-                            setEditProductId(
-                              productExists
-                                ? entry.productId
-                                : products[0]?.id || ""
-                            );
+                            setEditProductId(editableProductId);
                             setEditAmountValue(
                               String(
                                 Math.round(
@@ -237,7 +237,9 @@ export const DiaryEntriesWidget = observer(() => {
 
                         <button
                           type="button"
-                          onClick={() => productsStore.removeEntry(entry.id)}
+                          onClick={() =>
+                            void diaryEntriesStore.removeEntry(entry.id)
+                          }
                           className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
                         >
                           Удалить
@@ -263,6 +265,6 @@ export const DiaryEntriesWidget = observer(() => {
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 });

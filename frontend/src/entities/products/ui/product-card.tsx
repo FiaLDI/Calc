@@ -39,6 +39,11 @@ export const ProductCard = ({
               Выбран
             </span>
           ) : null}
+          {product.sourceKey === "custom" ? (
+            <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
+              {product.visibility === "public" ? "Для всех" : "Личный"}
+            </span>
+          ) : null}
         </span>
 
         <span className="block text-xs text-zinc-500">

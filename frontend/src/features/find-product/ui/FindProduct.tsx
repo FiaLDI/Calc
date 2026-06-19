@@ -11,7 +11,7 @@ type FindProductFormProps = {
   addProductModal: ReturnType<typeof useModal>;
   productPickerModal: ReturnType<typeof useModal>;
   products: Product[];
-  removeProduct: (id: string) => void;
+  removeProduct: (id: string) => Promise<void>;
   selectedProductId: string;
   setSelectedProductId: (id: string) => void;
 };
@@ -44,7 +44,7 @@ export const FindProductForm = ({
     );
 
     if (shouldRemove) {
-      removeProduct(productId);
+      void removeProduct(productId);
     }
   };
 

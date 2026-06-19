@@ -20,8 +20,10 @@ class DateStore {
   selectedDate: string;
   todayDateKey: string;
   isHydrated = false;
+  private readonly storageKey: string;
 
-  constructor(initialDateKey = formatDateKey(new Date())) {
+  constructor(userId: string, initialDateKey = formatDateKey(new Date())) {
+    this.storageKey = `${STORAGE_KEY}:${userId}`;
     this.selectedDate = initialDateKey;
     this.todayDateKey = initialDateKey;
     makeAutoObservable(this, {}, { autoBind: true });
@@ -34,7 +36,7 @@ class DateStore {
 
     try {
       this.todayDateKey = formatDateKey(new Date());
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+      const rawState = window.localStorage.getItem(this.storageKey);
 
       if (!rawState) {
         return;
@@ -62,7 +64,7 @@ class DateStore {
       selectedDate: this.selectedDate,
     };
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(this.storageKey, JSON.stringify(snapshot));
   }
 
   ensureHydrated() {
@@ -143,5 +145,5 @@ class DateStore {
   }
 }
 
-export const createDateStore = (initialDateKey?: string) =>
-  new DateStore(initialDateKey);
+export const createDateStore = (userId: string, initialDateKey?: string) =>
+  new DateStore(userId, initialDateKey);

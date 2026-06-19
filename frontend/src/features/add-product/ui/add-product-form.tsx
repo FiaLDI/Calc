@@ -7,8 +7,10 @@ import {
   PRODUCT_UNITS,
   type ProductCategory,
   type ProductUnit,
+  type ProductVisibility,
   useProductsStore,
 } from "@/entities/products";
+import { uploadImageToCdn } from "@/shared/api/cdn";
 
 type ProductFormState = {
   amountUnit: ProductUnit;
@@ -20,6 +22,7 @@ type ProductFormState = {
   imageUrl: string;
   name: string;
   protein: string;
+  visibility: ProductVisibility;
 };
 
 type AddProductFormProps = {
@@ -29,15 +32,16 @@ type AddProductFormProps = {
 };
 
 const initialFormState: ProductFormState = {
-  amountUnit: "г",
+  amountUnit: PRODUCT_UNITS[0],
   amountValue: "100",
   calories: "",
   carbs: "",
-  category: "Другое",
+  category: PRODUCT_CATEGORIES[PRODUCT_CATEGORIES.length - 1],
   fat: "",
   imageUrl: "",
   name: "",
   protein: "",
+  visibility: "private",
 };
 
 export const AddProductForm = ({
@@ -47,6 +51,9 @@ export const AddProductForm = ({
 }: AddProductFormProps) => {
   const productsStore = useProductsStore();
   const [formState, setFormState] = useState<ProductFormState>(initialFormState);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const form = (
     <form
@@ -54,30 +61,50 @@ export const AddProductForm = ({
       onSubmit={(event) => {
         event.preventDefault();
 
-        if (!formState.name.trim()) {
+        if (!formState.name.trim() || isSubmitting) {
           return;
         }
 
-        productsStore.addProduct({
-          name: formState.name,
-          category: formState.category,
-          amountValue: Number(formState.amountValue),
-          amountUnit: formState.amountUnit,
-          calories: Number(formState.calories),
-          protein: Number(formState.protein),
-          carbs: Number(formState.carbs),
-          fat: Number(formState.fat),
-          imageAlt: formState.name,
-          imageUrl: formState.imageUrl,
-        });
+        setIsSubmitting(true);
+        setSubmitError("");
 
-        setFormState(initialFormState);
-        onSuccess?.();
+        void (async () => {
+          try {
+            const uploadedImage = imageFile
+              ? await uploadImageToCdn(imageFile)
+              : null;
+            const imageUrl = uploadedImage?.url || formState.imageUrl;
+
+            await productsStore.addProduct({
+              amountUnit: formState.amountUnit,
+              amountValue: Number(formState.amountValue),
+              calories: Number(formState.calories),
+              carbs: Number(formState.carbs),
+              category: formState.category,
+              fat: Number(formState.fat),
+              imageAlt: formState.name,
+              imageUrl,
+              name: formState.name,
+              protein: Number(formState.protein),
+              visibility: formState.visibility,
+            });
+
+            setFormState(initialFormState);
+            setImageFile(null);
+            onSuccess?.();
+          } catch (error) {
+            setSubmitError(
+              error instanceof Error ? error.message : "Failed to add product."
+            );
+          } finally {
+            setIsSubmitting(false);
+          }
+        })();
       }}
     >
       <div>
         <label className="mb-1 block text-sm font-medium text-zinc-600">
-          Название продукта
+          Product name
         </label>
         <input
           type="text"
@@ -88,14 +115,14 @@ export const AddProductForm = ({
               name: event.target.value,
             }))
           }
-          placeholder="Например: Овсянка"
+          placeholder="Oatmeal"
           className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
         />
       </div>
 
       <div>
         <label className="mb-1 block text-sm font-medium text-zinc-600">
-          Категория
+          Category
         </label>
         <select
           value={formState.category}
@@ -115,10 +142,46 @@ export const AddProductForm = ({
         </select>
       </div>
 
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-zinc-600">
+          Кто увидит продукт
+        </legend>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            ["private", "Только я"],
+            ["public", "Все пользователи"],
+          ] as const).map(([visibility, label]) => (
+            <label
+              className={`cursor-pointer rounded-2xl border px-4 py-3 text-sm transition ${
+                formState.visibility === visibility
+                  ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-600"
+              }`}
+              key={visibility}
+            >
+              <input
+                checked={formState.visibility === visibility}
+                className="sr-only"
+                name="visibility"
+                onChange={() =>
+                  setFormState((currentState) => ({
+                    ...currentState,
+                    visibility,
+                  }))
+                }
+                type="radio"
+                value={visibility}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <div className="grid grid-cols-[1fr_112px] gap-3">
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-600">
-            Порция
+            Portion
           </label>
           <input
             type="number"
@@ -137,7 +200,7 @@ export const AddProductForm = ({
 
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-600">
-            Ед.
+            Unit
           </label>
           <select
             value={formState.amountUnit}
@@ -160,8 +223,16 @@ export const AddProductForm = ({
 
       <div>
         <label className="mb-1 block text-sm font-medium text-zinc-600">
-          Картинка
+          Image
         </label>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={(event) => {
+            setImageFile(event.target.files?.[0] || null);
+          }}
+          className="mb-2 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white focus:border-emerald-400 focus:bg-white"
+        />
         <input
           type="text"
           inputMode="url"
@@ -172,14 +243,17 @@ export const AddProductForm = ({
               imageUrl: event.target.value,
             }))
           }
-          placeholder="/products/banana.png"
+          placeholder="Or paste image URL"
           className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
         />
+        {imageFile ? (
+          <p className="mt-1 text-xs text-zinc-400">{imageFile.name}</p>
+        ) : null}
       </div>
 
       <div>
         <label className="mb-1 block text-sm font-medium text-zinc-600">
-          Калории на порцию
+          Calories per portion
         </label>
         <input
           type="number"
@@ -199,7 +273,7 @@ export const AddProductForm = ({
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-zinc-500">
-            Белки
+            Protein
           </label>
           <input
             type="number"
@@ -219,7 +293,7 @@ export const AddProductForm = ({
 
         <div>
           <label className="mb-1 block text-xs font-medium text-zinc-500">
-            Углеводы
+            Carbs
           </label>
           <input
             type="number"
@@ -239,7 +313,7 @@ export const AddProductForm = ({
 
         <div>
           <label className="mb-1 block text-xs font-medium text-zinc-500">
-            Жиры
+            Fat
           </label>
           <input
             type="number"
@@ -258,13 +332,19 @@ export const AddProductForm = ({
         </div>
       </div>
 
+      {submitError ? (
+        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {submitError}
+        </p>
+      ) : null}
+
       <div className="mt-2 flex gap-2">
         <button
           type="submit"
-          disabled={!formState.name.trim()}
+          disabled={!formState.name.trim() || isSubmitting}
           className="flex-1 rounded-2xl bg-zinc-900 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
         >
-          Добавить продукт
+          {isSubmitting ? "Saving..." : "Add product"}
         </button>
 
         {onCancel ? (
@@ -273,7 +353,7 @@ export const AddProductForm = ({
             onClick={onCancel}
             className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-200"
           >
-            Отмена
+            Cancel
           </button>
         ) : null}
       </div>
@@ -287,8 +367,8 @@ export const AddProductForm = ({
   return (
     <div className="w-full rounded-4xl bg-white p-6 shadow-xl">
       <div className="mb-5">
-        <p className="text-sm text-zinc-400">Новый продукт</p>
-        <h2 className="text-2xl font-bold">Добавить в базу</h2>
+        <p className="text-sm text-zinc-400">New product</p>
+        <h2 className="text-2xl font-bold">Add to database</h2>
       </div>
 
       {form}

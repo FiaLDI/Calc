@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 
-import { AppProviders } from "./providers";
-import "./globals.css";
 import { formatDateKey } from "@/shared/lib/format";
 
+import { AppProviders } from "./providers";
+import "./globals.css";
+
 export const metadata: Metadata = {
-  title: "Calc - твой помощник в мире калорий",
+  title: "Calc — дневник питания",
   description:
-    "Calc помогает считать калории, отслеживать макронутриенты и собирать удобную базу продуктов на каждый день.",
+    "Calc помогает считать калории, отслеживать макронутриенты и вести личный дневник питания.",
 };
 
 export default function RootLayout({

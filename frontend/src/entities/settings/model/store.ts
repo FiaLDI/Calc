@@ -12,20 +12,9 @@ import {
   DEFAULT_TARGET_WEIGHT_KG,
   STORAGE_KEY,
 } from "./constants";
-import { NUTRITION_GOALS, type NutritionGoal } from "./types";
+import { SettingsSnapshot, type NutritionGoal } from "./types";
+import { isNutritionGoal } from "../lib/sanitize";
 
-type StoreSnapshot = {
-  nutritionGoal: NutritionGoal;
-  targetCarbs: number;
-  targetCalories: number;
-  targetFat: number;
-  targetProtein: number;
-  targetWeightKg: number;
-};
-
-const isNutritionGoal = (value: unknown): value is NutritionGoal =>
-  typeof value === "string" &&
-  (NUTRITION_GOALS as readonly string[]).includes(value);
 
 class SettingsStore {
   targetCalories = DEFAULT_TARGET_CALORIES;
@@ -35,8 +24,10 @@ class SettingsStore {
   targetWeightKg = DEFAULT_TARGET_WEIGHT_KG;
   nutritionGoal = DEFAULT_NUTRITION_GOAL;
   isHydrated = false;
+  private readonly storageKey: string;
 
-  constructor() {
+  constructor(userId: string) {
+    this.storageKey = `${STORAGE_KEY}:${userId}`;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -46,13 +37,13 @@ class SettingsStore {
     }
 
     try {
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+      const rawState = window.localStorage.getItem(this.storageKey);
 
       if (!rawState) {
         return;
       }
 
-      const parsedState = JSON.parse(rawState) as Partial<StoreSnapshot>;
+      const parsedState = JSON.parse(rawState) as Partial<SettingsSnapshot>;
 
       this.targetCalories = normalizePositive(
         parsedState.targetCalories ?? 0,
@@ -94,7 +85,7 @@ class SettingsStore {
       return;
     }
 
-    const snapshot: StoreSnapshot = {
+    const snapshot: SettingsSnapshot = {
       nutritionGoal: this.nutritionGoal,
       targetCarbs: this.targetCarbs,
       targetCalories: this.targetCalories,
@@ -103,7 +94,7 @@ class SettingsStore {
       targetWeightKg: this.targetWeightKg,
     };
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(this.storageKey, JSON.stringify(snapshot));
   }
 
   ensureHydrated() {
@@ -154,4 +145,4 @@ class SettingsStore {
   }
 }
 
-export const createSettingsStore = () => new SettingsStore();
+export const createSettingsStore = (userId: string) => new SettingsStore(userId);

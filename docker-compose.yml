@@ -1,0 +1,130 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-calc}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-calc-password}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-calc}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --username $$MONGO_INITDB_ROOT_USERNAME --password $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval \"quit(db.adminCommand('ping').ok ? 0 : 2)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      FRONTEND_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      JWT_TOKEN: ${JWT_TOKEN:?JWT_TOKEN must be set in .env}
+      MONGO_DB_NAME: ${MONGO_DATABASE:-calc}
+      MONGO_URI: mongodb://${MONGO_ROOT_USERNAME:-calc}:${MONGO_ROOT_PASSWORD:-calc-password}@mongo:27017/${MONGO_DATABASE:-calc}?authSource=admin
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  cdn:
+    build:
+      context: ./cdn
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      FRONTEND_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost}
+      PUBLIC_URL: ${PUBLIC_ORIGIN:-http://localhost}
+      UPLOAD_DIR: /app/uploads/images
+      MAX_IMAGE_SIZE_BYTES: 5242880
+    volumes:
+      - cdn_uploads:/app/uploads
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: /api/v1
+        NEXT_PUBLIC_CDN_UPLOAD_URL: /images
+        NEXT_IMAGE_UNOPTIMIZED: "true"
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    depends_on:
+      backend:
+        condition: service_healthy
+      cdn:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      cdn:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cdn_uploads:
+  mongo_data:

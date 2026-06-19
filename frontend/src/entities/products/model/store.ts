@@ -1,38 +1,21 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
-import { fetchProductsFromApi } from "@/shared/api/products";
 import { normalizeNonNegative, normalizePositive } from "@/shared/lib/format";
-import { createId } from "@/shared/lib/utils";
 
-import {
-  calculateEntryNutrition,
-  normalizeServings,
-} from "../lib/calculate-entry-nutrition";
 import {
   isProductCategory,
   isProductUnit,
-  sanitizeEntry,
   sanitizeProduct,
 } from "../lib/sanitize";
-import { CUSTOM_SOURCE_KEY, CUSTOM_SOURCE_LABEL, STORAGE_KEY } from "./constants";
+import { CUSTOM_SOURCE_KEY, STORAGE_KEY } from "./constants";
 import {
-  getDayTotals,
-  getEntriesByDate,
-  getMacroProgress,
-  getWeeklyCalories,
-  getWeeklyCaloriesStats,
-  getWeeklyKbju,
-} from "./selectors";
-import type {
-  DiaryEntry,
-  MacroTargets,
-  MealType,
-  Product,
-  WeeklyDay,
-} from "./types";
+  ProductApi,
+  type ProductApiPayload,
+  type ProductSourceApiItem,
+} from "./api";
+import { PRODUCT_CATEGORIES, PRODUCT_UNITS, type Product } from "./types";
 
 type StoreSnapshot = {
-  entries: DiaryEntry[];
   products: Product[];
 };
 
@@ -42,14 +25,16 @@ export type ProductDraft = Omit<
 >;
 
 class ProductsStore {
-  entries: DiaryEntry[] = [];
   customProducts: Product[] = [];
   remoteProducts: Product[] = [];
+  remoteProductSources: ProductSourceApiItem[] = [];
   isHydrated = false;
   isRemoteProductsLoading = false;
   remoteProductsError = "";
+  private readonly storageKey: string;
 
-  constructor() {
+  constructor(userId: string) {
+    this.storageKey = `${STORAGE_KEY}:${userId}`;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -59,7 +44,7 @@ class ProductsStore {
     }
 
     try {
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+      const rawState = window.localStorage.getItem(this.storageKey);
 
       if (!rawState) {
         return;
@@ -67,18 +52,12 @@ class ProductsStore {
 
       const parsedState = JSON.parse(rawState) as Partial<StoreSnapshot>;
 
-      this.entries = Array.isArray(parsedState.entries)
-        ? parsedState.entries
-            .map((entry) => sanitizeEntry(entry))
-            .filter((entry): entry is DiaryEntry => entry !== null)
-        : [];
       this.customProducts = Array.isArray(parsedState.products)
         ? parsedState.products
             .map((product) => sanitizeProduct(product))
             .filter((product): product is Product => product !== null)
         : [];
     } catch {
-      this.entries = [];
       this.customProducts = [];
     } finally {
       this.isHydrated = true;
@@ -91,11 +70,10 @@ class ProductsStore {
     }
 
     const snapshot: StoreSnapshot = {
-      entries: this.entries,
       products: this.customProducts,
     };
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(this.storageKey, JSON.stringify(snapshot));
   }
 
   async loadRemoteProducts() {
@@ -107,20 +85,24 @@ class ProductsStore {
     this.remoteProductsError = "";
 
     try {
-      const products = await fetchProductsFromApi();
+      const [products, productSources] = await Promise.all([
+        ProductApi.fetchProducts(),
+        ProductApi.fetchProductSources(),
+      ]);
       const remoteProducts = products
-        .map((product) => sanitizeProduct({ ...product, isReadonly: true }))
+        .map((product) => sanitizeProduct(product))
         .filter((product): product is Product => product !== null);
 
       runInAction(() => {
         this.remoteProducts = remoteProducts;
+        this.remoteProductSources = productSources;
       });
     } catch (error) {
       runInAction(() => {
         this.remoteProductsError =
           error instanceof Error
             ? error.message
-            : "Не удалось загрузить каталог продуктов.";
+            : "Failed to load product catalog.";
       });
     } finally {
       runInAction(() => {
@@ -135,114 +117,76 @@ class ProductsStore {
     }
   }
 
-  addProduct(draft: ProductDraft) {
+  private buildProductPayload(draft: ProductDraft): ProductApiPayload | null {
     this.ensureHydrated();
 
     const name = draft.name.trim();
 
     if (!name) {
-      return;
+      return null;
     }
 
-    const product: Product = {
-      ...draft,
-      id: createId(),
-      name,
-      category: isProductCategory(draft.category) ? draft.category : "Другое",
+    return {
+      amountUnit: isProductUnit(draft.amountUnit)
+        ? draft.amountUnit
+        : PRODUCT_UNITS[0],
       amountValue: normalizePositive(draft.amountValue, 100),
-      amountUnit: isProductUnit(draft.amountUnit) ? draft.amountUnit : "г",
       calories: normalizeNonNegative(draft.calories),
-      protein: normalizeNonNegative(draft.protein),
       carbs: normalizeNonNegative(draft.carbs),
+      category: isProductCategory(draft.category)
+        ? draft.category
+        : PRODUCT_CATEGORIES[PRODUCT_CATEGORIES.length - 1],
       fat: normalizeNonNegative(draft.fat),
-      createdAt: new Date().toISOString(),
       imageAlt: draft.imageAlt.trim() || name,
       imageUrl: draft.imageUrl.trim(),
-      sourceKey: CUSTOM_SOURCE_KEY,
-      sourceLabel: CUSTOM_SOURCE_LABEL,
-      isReadonly: false,
+      name,
+      protein: normalizeNonNegative(draft.protein),
+      visibility: draft.visibility === "public" ? "public" : "private",
     };
-
-    this.customProducts.unshift(product);
-    this.persist();
   }
 
-  removeProduct(productId: string) {
-    this.ensureHydrated();
-    this.customProducts = this.customProducts.filter(
-      (product) => product.id !== productId
-    );
-    this.persist();
-  }
+  async addProduct(draft: ProductDraft) {
+    const payload = this.buildProductPayload(draft);
 
-  addEntry(productId: string, servings: number, mealType: MealType, date: string) {
-    this.ensureHydrated();
-    const product = this.products.find((item) => item.id === productId);
-
-    if (!product) {
-      return;
+    if (!payload) {
+      return null;
     }
 
-    const normalizedServings = normalizeServings(servings);
-    const nutrition = calculateEntryNutrition(product, normalizedServings);
-    const entry: DiaryEntry = {
-      id: createId(),
-      productId: product.id,
-      productName: product.name,
-      productImageAlt: product.imageAlt || product.name,
-      productImageUrl: product.imageUrl,
-      amountValue: product.amountValue,
-      amountUnit: product.amountUnit,
-      servings: normalizedServings,
-      mealType,
-      date,
-      ...nutrition,
-      createdAt: new Date().toISOString(),
-    };
+    const product = await ProductApi.createProduct(payload);
+    const sanitizedProduct = sanitizeProduct(product);
 
-    this.entries.unshift(entry);
-    this.persist();
-  }
-
-  updateEntry(
-    entryId: string,
-    productId: string,
-    servings: number,
-    mealType: MealType
-  ) {
-    this.ensureHydrated();
-    const product = this.products.find((item) => item.id === productId);
-
-    if (!product) {
-      return;
+    if (!sanitizedProduct) {
+      return null;
     }
 
-    const normalizedServings = normalizeServings(servings);
-    const nutrition = calculateEntryNutrition(product, normalizedServings);
+    runInAction(() => {
+      this.remoteProducts.unshift(sanitizedProduct);
+    });
 
-    this.entries = this.entries.map((entry) =>
-      entry.id === entryId
-        ? {
-            ...entry,
-            productId: product.id,
-            productName: product.name,
-            productImageAlt: product.imageAlt || product.name,
-            productImageUrl: product.imageUrl,
-            amountValue: product.amountValue,
-            amountUnit: product.amountUnit,
-            servings: normalizedServings,
-            mealType,
-            ...nutrition,
-          }
-        : entry
-    );
-    this.persist();
+    return sanitizedProduct;
   }
 
-  removeEntry(entryId: string) {
+  async removeProduct(productId: string) {
     this.ensureHydrated();
-    this.entries = this.entries.filter((entry) => entry.id !== entryId);
-    this.persist();
+
+    const isRemoteProduct = this.remoteProducts.some(
+      (product) => product.id === productId
+    );
+    const product = this.products.find((item) => item.id === productId);
+
+    if (isRemoteProduct && product?.sourceKey === CUSTOM_SOURCE_KEY) {
+      await ProductApi.removeProduct(productId);
+    }
+
+    runInAction(() => {
+      this.customProducts = this.customProducts.filter(
+        (item) => item.id !== productId
+      );
+      this.remoteProducts = this.remoteProducts.filter(
+        (item) => item.id !== productId
+      );
+      this.persist();
+    });
   }
 
   get products() {
@@ -257,30 +201,6 @@ class ProductsStore {
       return true;
     });
   }
-
-  selectedEntries(date: string) {
-    return getEntriesByDate(this.entries, date);
-  }
-
-  selectedDayTotals(date: string) {
-    return getDayTotals(this.entries, date);
-  }
-
-  macroProgress(macroTargets: MacroTargets, date: string) {
-    return getMacroProgress(this.entries, macroTargets, date);
-  }
-
-  weeklyCalories(weeklyDays: WeeklyDay[]) {
-    return getWeeklyCalories(this.entries, weeklyDays);
-  }
-
-  weeklyKbju(weeklyDays: WeeklyDay[]) {
-    return getWeeklyKbju(this.entries, weeklyDays);
-  }
-
-  weeklyCaloriesStats(weeklyDays: WeeklyDay[]) {
-    return getWeeklyCaloriesStats(this.entries, weeklyDays);
-  }
 }
 
-export const createProductsStore = () => new ProductsStore();
+export const createProductsStore = (userId: string) => new ProductsStore(userId);

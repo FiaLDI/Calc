@@ -36,7 +36,7 @@ export const ProductLibraryWidget = observer(() => {
     );
 
     if (shouldRemove) {
-      productsStore.removeProduct(productId);
+      void productsStore.removeProduct(productId);
     }
   };
 
