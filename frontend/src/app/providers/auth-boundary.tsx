@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import type { PropsWithChildren } from "react";
 
 import { useAuthStore } from "@/entities/auth";
-import { AuthForm } from "@/features/auth";
+import { AuthForm } from "@/features/auth-form";
 
 import { StoreProvider } from "./store.provider";
 

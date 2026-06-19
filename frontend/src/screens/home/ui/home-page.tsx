@@ -3,7 +3,7 @@
 import { observer } from "mobx-react-lite";
 
 import { useAuthStore } from "@/entities/auth";
-import { DataTransferActions } from "@/features/data-transfer";
+import { UserProfile } from "@/features/user-profile";
 import { CalorieSummaryWidget } from "@/widgets/calorie-summary";
 import { DayCalendarWidget } from "@/widgets/day-calendar";
 import { DiaryAdder } from "@/widgets/diary-adder";
@@ -28,7 +28,7 @@ export const HomePage = observer(() => {
           </div>
         </div>
         <div className="ml-auto flex flex-wrap items-start justify-end gap-2">
-          <DataTransferActions />
+          <UserProfile />
           <button
             className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-60"
             disabled={authStore.isSubmitting}
