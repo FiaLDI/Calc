@@ -25,3 +25,12 @@ docker compose down
 ## Локальная разработка
 
 Запустите `npm run dev` отдельно в `backend`, `cdn` и `frontend`.
+
+## Тесты
+
+```bash
+cd frontend && npm test && npm run typecheck && npm run lint
+cd backend  && npm test && npm run typecheck
+```
+
+CI (GitHub Actions): lint/typecheck/test для `frontend` и `backend` на push/PR.

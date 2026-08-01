@@ -51,11 +51,6 @@ export type ProductSourceMeta = {
   label: string;
 };
 
-export interface ProductSourceRepository {
-  getMeta(): ProductSourceMeta;
-  listProducts(): Promise<ProductDto[]>;
-}
-
 export interface ProductsRepositoryContract {
   createProduct(userId: string, payload: ProductCreatePayload): Promise<ProductDto>;
   deleteProduct(userId: string, productId: string): Promise<boolean>;
