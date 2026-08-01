@@ -4,6 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useState, type FormEvent } from "react";
 
 import { useAuthStore } from "@/entities/auth";
+import { ContinueLocallyButton } from "@/features/continue-locally";
 
 type AuthMode = "login" | "register";
 
@@ -122,6 +123,17 @@ export const AuthForm = observer(() => {
                 : "Создать аккаунт"}
           </button>
         </form>
+
+        <div className="my-5 flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-zinc-400">
+          <span className="h-px flex-1 bg-zinc-200" />
+          или
+          <span className="h-px flex-1 bg-zinc-200" />
+        </div>
+
+        <ContinueLocallyButton />
+        <p className="mt-3 text-center text-xs leading-5 text-zinc-400">
+          Данные останутся только в этом браузере. Позже можно создать аккаунт.
+        </p>
       </section>
     </main>
   );

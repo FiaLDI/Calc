@@ -51,9 +51,22 @@ export type ProductSourceMeta = {
   label: string;
 };
 
-export interface ProductSourceRepository {
-  getMeta(): ProductSourceMeta;
-  listProducts(): Promise<ProductDto[]>;
+export type CatalogSearchQuery = {
+  limit: number;
+  locale?: string;
+  offset: number;
+  q: string;
+};
+
+export type CatalogSearchResult = {
+  items: ProductDto[];
+  total: number;
+};
+
+export interface ProductCatalogProvider {
+  readonly meta: ProductSourceMeta;
+  getByExternalId(externalId: string): Promise<ProductDto | null>;
+  search(query: CatalogSearchQuery): Promise<CatalogSearchResult>;
 }
 
 export interface ProductsRepositoryContract {

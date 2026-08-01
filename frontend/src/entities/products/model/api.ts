@@ -105,6 +105,21 @@ export const ProductApi = {
     return response.data;
   },
 
+  async importProduct(payload: {
+    externalId: string;
+    sourceKey: string;
+  }): Promise<ProductApiProduct> {
+    const response = await fetchFromApi<
+      ProductApiResponse,
+      { externalId: string; sourceKey: string }
+    >("products/import", {
+      body: payload,
+      method: "POST",
+    });
+
+    return response.data;
+  },
+
   async removeProduct(productId: string): Promise<void> {
     await fetchFromApi<void>(`products/${encodeURIComponent(productId)}`, {
       method: "DELETE",

@@ -1,25 +1,18 @@
 import type { ProductSourceMeta } from "./products.types.js";
 
+export const CUSTOM_SOURCE_KEY = "custom";
+export const OPEN_FOOD_FACTS_SOURCE_KEY = "off";
+
 export const PRODUCT_SOURCE_META: ProductSourceMeta[] = [
   {
     description: "User-created products.",
-    key: "custom",
-    label: "Custom products",
+    key: CUSTOM_SOURCE_KEY,
+    label: "Мои продукты",
   },
   {
-    description: "Warehouse catalog with staple grocery items.",
-    key: "warehouse",
-    label: "Warehouse DB",
-  },
-  {
-    description: "External nutrition catalog synced from partner data.",
-    key: "catalog",
-    label: "Catalog DB",
-  },
-  {
-    description: "Prepared meal base with full ready-to-eat dishes.",
-    key: "recipes",
-    label: "Recipe DB",
+    description: "Open Food Facts public food database.",
+    key: OPEN_FOOD_FACTS_SOURCE_KEY,
+    label: "Open Food Facts",
   },
 ];
 

@@ -1,5 +1,8 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
+import { isLocalUserId } from "@/shared/config/local-mode";
+import { createId } from "@/shared/lib/utils";
+
 import {
   calculateEntryNutrition,
   normalizeServings,
@@ -33,10 +36,16 @@ class DiaryEntriesStore {
   isRemoteEntriesLoading = false;
   remoteEntriesError = "";
   private readonly storageKey: string;
+  private readonly userId: string;
 
   constructor(userId: string) {
+    this.userId = userId;
     this.storageKey = `${STORAGE_KEY}:${userId}`;
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  private get isLocal() {
+    return isLocalUserId(this.userId);
   }
 
   hydrate() {
@@ -87,6 +96,10 @@ class DiaryEntriesStore {
 
   async loadEntries() {
     if (typeof window === "undefined" || this.isRemoteEntriesLoading) {
+      return;
+    }
+
+    if (this.isLocal) {
       return;
     }
 
@@ -151,6 +164,21 @@ class DiaryEntriesStore {
   ) {
     this.ensureHydrated();
 
+    if (this.isLocal) {
+      const payload = this.buildEntryPayload(product, servings, mealType, date);
+      const entry: DiaryEntry = {
+        id: createId(),
+        createdAt: new Date().toISOString(),
+        ...payload,
+      };
+
+      runInAction(() => {
+        this.entries.unshift(entry);
+        this.persist();
+      });
+      return;
+    }
+
     const entry = await EntriesApi.createEntry(
       this.buildEntryPayload(product, servings, mealType, date)
     );
@@ -175,6 +203,27 @@ class DiaryEntriesStore {
       return;
     }
 
+    if (this.isLocal) {
+      const payload = this.buildEntryPayload(
+        product,
+        servings,
+        mealType,
+        currentEntry.date
+      );
+      const updatedEntry: DiaryEntry = {
+        ...currentEntry,
+        ...payload,
+      };
+
+      runInAction(() => {
+        this.entries = this.entries.map((entry) =>
+          entry.id === entryId ? updatedEntry : entry
+        );
+        this.persist();
+      });
+      return;
+    }
+
     const updatedEntry = await EntriesApi.updateEntry(
       entryId,
       this.buildEntryPayload(
@@ -196,7 +245,9 @@ class DiaryEntriesStore {
   async removeEntry(entryId: string) {
     this.ensureHydrated();
 
-    await EntriesApi.removeEntry(entryId);
+    if (!this.isLocal) {
+      await EntriesApi.removeEntry(entryId);
+    }
 
     runInAction(() => {
       this.entries = this.entries.filter((entry) => entry.id !== entryId);

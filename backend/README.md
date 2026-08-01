@@ -1,6 +1,6 @@
 # Backend
 
-Express API on TypeScript that aggregates products from multiple source catalogs and exposes them to the frontend.
+Express API on TypeScript for user products, diary entries, auth, and XML data transfer.
 
 ## Scripts
 
@@ -19,5 +19,7 @@ Use `.env.example` as a template:
 
 - `GET /health`
 - `GET /api/v1/products`
+- `POST /api/v1/products`
+- `POST /api/v1/products/import`
 - `GET /api/v1/products/:id`
 - `GET /api/v1/product-sources`

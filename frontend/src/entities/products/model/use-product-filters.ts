@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { PRODUCT_CATEGORIES, type Product, type ProductCategory } from "./types";
+import type { ProductSourceApiItem } from "./api";
 
 export const ALL_PRODUCT_CATEGORIES = "all";
 export const ALL_PRODUCT_SOURCES = "all";
@@ -11,20 +12,37 @@ export type ProductCategoryFilter =
   | ProductCategory
   | typeof ALL_PRODUCT_CATEGORIES;
 
-export const useProductFilters = (products: Product[]) => {
-  const [search, setSearch] = useState("");
+type UseProductFiltersOptions = {
+  onSearchChange?: (search: string) => void;
+  sources?: ProductSourceApiItem[];
+};
+
+export const useProductFilters = (
+  products: Product[],
+  options?: UseProductFiltersOptions
+) => {
+  const [search, setSearchState] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ProductCategoryFilter>(
     ALL_PRODUCT_CATEGORIES
   );
   const [sourceFilter, setSourceFilter] = useState(ALL_PRODUCT_SOURCES);
 
-  const sourceFilters = useMemo(
-    () =>
-      Array.from(
-        new Map(products.map((product) => [product.sourceKey, product.sourceLabel]))
-      ),
-    [products]
-  );
+  const setSearch = (value: string) => {
+    setSearchState(value);
+    options?.onSearchChange?.(value);
+  };
+
+  const sourceFilters = useMemo(() => {
+    if (options?.sources?.length) {
+      return options.sources.map(
+        (source) => [source.key, source.label] as [string, string]
+      );
+    }
+
+    return Array.from(
+      new Map(products.map((product) => [product.sourceKey, product.sourceLabel]))
+    );
+  }, [options, products]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
@@ -57,4 +75,15 @@ export const useProductFilters = (products: Product[]) => {
     sourceFilter,
     sourceFilters,
   };
+};
+
+export const useDebouncedValue = <T,>(value: T, delayMs: number) => {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, value]);
+
+  return debounced;
 };

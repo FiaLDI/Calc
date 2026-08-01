@@ -73,3 +73,16 @@ export const parseProductCreatePayload = (
     visibility: getVisibility(value),
   };
 };
+
+export const parseProductImportPayload = (
+  value: unknown
+): { externalId: string; sourceKey: string } => {
+  if (!isRecord(value)) {
+    throw new HttpError(400, "Import payload must be an object.");
+  }
+
+  return {
+    externalId: getString(value, "externalId"),
+    sourceKey: getString(value, "sourceKey"),
+  };
+};
