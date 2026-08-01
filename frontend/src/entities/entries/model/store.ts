@@ -56,23 +56,23 @@ class DiaryEntriesStore {
     try {
       const rawState = window.localStorage.getItem(this.storageKey);
 
-      if (!rawState) {
-        return;
+      if (rawState) {
+        const parsedState = JSON.parse(rawState) as Partial<StoreSnapshot>;
+
+        this.entries = Array.isArray(parsedState.entries)
+          ? parsedState.entries
+              .map((entry) => sanitizeEntry(entry))
+              .filter((entry): entry is DiaryEntry => entry !== null)
+          : [];
       }
-
-      const parsedState = JSON.parse(rawState) as Partial<StoreSnapshot>;
-
-      this.entries = Array.isArray(parsedState.entries)
-        ? parsedState.entries
-            .map((entry) => sanitizeEntry(entry))
-            .filter((entry): entry is DiaryEntry => entry !== null)
-        : [];
     } catch {
       this.entries = [];
     } finally {
       this.isHydrated = true;
     }
 
+    // Always sync from API for authenticated users — including first visit
+    // with empty localStorage (early return used to skip this call).
     void this.loadEntries();
   }
 
