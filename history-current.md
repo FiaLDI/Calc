@@ -58,8 +58,9 @@ cd backend  && npm test && npm run typecheck
 5. **Удалили сид-каталог** — см. §3.
 6. **Локальный режим как фича для всех** — `features/continue-locally`, без env-флага; см. §9.
 7. **Слой каталогов + Open Food Facts** — см. §10.
-8. **Activity-экраны** — 1 экран = 1 виджет (`/`, `/add`, `/entries`, `/products`, `/week`); shell: Header + Nav + Calendar.
-9. **Зафиксировали** состояние в этом файле.
+8. **Activity-экраны** — 1 экран = 1 виджет (`/`, `/add`, `/entries`, `/products`, `/week`); shell: Header + Nav + DateBar.
+9. **DateBar** — компактная полоса `‹ дата ›`; полный календарь в модалке по клику на дату.
+10. **Зафиксировали** состояние в этом файле.
 
 ---
 
