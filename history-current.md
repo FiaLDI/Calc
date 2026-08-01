@@ -10,15 +10,16 @@
 | Параметр | Значение |
 |---|---|
 | Ветка | `main` ↔ `origin/main` |
-| Working tree | **dirty** — тесты, CI, удаление сида, этот файл (не закоммичено) |
+| Working tree | **dirty** — тесты, CI, удаление сида, локальный режим, этот файл (не закоммичено) |
 | Remote | `git@github.com:FiaLDI/Calc.git` |
 | Продукты | только `custom` (пользовательские); сид-каталога нет |
-| Тесты | Vitest · frontend **24** · backend **3** |
+| Локальный режим | фича для всех: кнопка «Продолжить без аккаунта» на экране входа |
+| Тесты | Vitest · frontend **31** · backend **3** |
 | CI | `.github/workflows/ci.yml` (Node 22) |
 
 ### Продукт
 
-**Calc** — дневник питания: калории, КБЖУ, цели по весу/режиму, мультипользователи, XML export/import.
+**Calc** — дневник питания: калории, КБЖУ, цели по весу/режиму, мультипользователи, XML export/import. Есть offline/local режим без логина.
 
 ### Стек
 
@@ -37,6 +38,8 @@ docker compose up --build -d
 # → http://localhost
 ```
 
+Локальный режим без бэкенда: на экране входа → **«Продолжить без аккаунта»**.
+
 ### Тесты / проверки
 
 ```bash
@@ -53,7 +56,8 @@ cd backend  && npm test && npm run typecheck
 3. **Предложили** матрицу тестов (business / store / UI).
 4. **Внедрили тесты + CI** — см. §4–5.
 5. **Удалили сид-каталог** — см. §3.
-6. **Зафиксировали** состояние в этом файле.
+6. **Локальный режим как фича для всех** — `features/continue-locally`, без env-флага; см. §9.
+7. **Зафиксировали** состояние в этом файле.
 
 ---
 
@@ -77,7 +81,7 @@ cd backend  && npm test && npm run typecheck
 
 ## 4. Тесты (актуально)
 
-### Frontend — 24
+### Frontend — 31
 
 | Файл | Покрытие |
 |---|---|
@@ -88,6 +92,8 @@ cd backend  && npm test && npm run typecheck
 | `entities/entries/lib/sanitize.test.ts` | валидация записи |
 | `entities/settings/model/store.test.ts` | hydrate / persist / recalc |
 | `widgets/calorie-summary/.../calorie-summary-widget.test.tsx` | UI summary (моки stores) |
+| `shared/config/local-mode.test.ts` | `isLocalMode` env flag |
+| `entities/auth/model/store.test.ts` | local user / logout no-op |
 
 Конфиг: `frontend/vitest.config.mts`, `frontend/vitest.setup.ts`.
 
@@ -121,7 +127,8 @@ cd backend  && npm test && npm run typecheck
 - `+` тесты FE/BE, vitest-конфиги, deps в package.json / lock
 - `+` `.github/workflows/ci.yml`
 - `+` `history-current.md`
-- `~` README (секция тестов), backend README
+- `+` локальный режим как фича (`continue-locally`), preference в localStorage
+- `~` README (тесты + режим без аккаунта), backend README
 - `−` сид JSON/репозитории/seed/картинки
 - `~` `server.ts`, `products.sources.ts`, `products.types.ts`, `backend/tsconfig.json`
 
@@ -133,13 +140,31 @@ cd backend  && npm test && npm run typecheck
 - Vercel не покрывает CDN / Mongo (полный стек = Docker).
 - Поведение: `normalizeServings(0)` → `1`; macro progress при target `0` → `100%` (задокументировано тестами).
 - Старые сид-документы в Mongo могут остаться после удаления кода.
+- Local mode: data URLs картинок в localStorage могут раздувать квоту; нет XML sync.
 
 ---
 
 ## 8. Следующие шаги
 
-1. Закоммитить текущий diff (тесты + CI + удаление сида).
+1. Закоммитить текущий diff (тесты + CI + удаление сида + local mode).
 2. Auth / signed upload на CDN.
 3. Расширить store/UI тесты (entries, auth-form, diary-adder).
 4. Выбрать канонический деплой: Docker vs Vercel.
-|
+5. Опционально: локальный XML export/import без backend.
+
+---
+
+## 9. Локальный режим (фича для всех)
+
+Отдельная фича `features/continue-locally` — кнопка на экране входа, без env-флагов.
+
+| Часть | Поведение |
+|---|---|
+| UI | «Продолжить без аккаунта» + пояснение; бейдж «Локально»; «К входу» выходит |
+| Auth | `enterLocalSession()` → synthetic user `id: local`; preference в `localStorage` (`calc:local-mode`) |
+| Reload | `checkSession` восстанавливает локальную сессию из preference |
+| Entries / Products | CRUD в localStorage при `userId === local` |
+| CDN | картинки как data URL |
+| XML | data-transfer скрыт в профиле |
+
+Хелпер: `shared/config/local-mode.ts` (`isLocalMode` / `enableLocalMode` / `disableLocalMode`).

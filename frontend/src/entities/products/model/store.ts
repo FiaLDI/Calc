@@ -1,13 +1,15 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { normalizeNonNegative, normalizePositive } from "@/shared/lib/format";
+import { isLocalUserId } from "@/shared/config/local-mode";
+import { createId } from "@/shared/lib/utils";
 
 import {
   isProductCategory,
   isProductUnit,
   sanitizeProduct,
 } from "../lib/sanitize";
-import { CUSTOM_SOURCE_KEY, STORAGE_KEY } from "./constants";
+import { CUSTOM_SOURCE_KEY, CUSTOM_SOURCE_LABEL, STORAGE_KEY } from "./constants";
 import {
   ProductApi,
   type ProductApiPayload,
@@ -32,10 +34,16 @@ class ProductsStore {
   isRemoteProductsLoading = false;
   remoteProductsError = "";
   private readonly storageKey: string;
+  private readonly userId: string;
 
   constructor(userId: string) {
+    this.userId = userId;
     this.storageKey = `${STORAGE_KEY}:${userId}`;
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  private get isLocal() {
+    return isLocalUserId(this.userId);
   }
 
   hydrate() {
@@ -78,6 +86,10 @@ class ProductsStore {
 
   async loadRemoteProducts() {
     if (typeof window === "undefined" || this.isRemoteProductsLoading) {
+      return;
+    }
+
+    if (this.isLocal) {
       return;
     }
 
@@ -152,6 +164,28 @@ class ProductsStore {
       return null;
     }
 
+    if (this.isLocal) {
+      const product = sanitizeProduct({
+        ...payload,
+        createdAt: new Date().toISOString(),
+        id: createId(),
+        isReadonly: false,
+        sourceKey: CUSTOM_SOURCE_KEY,
+        sourceLabel: CUSTOM_SOURCE_LABEL,
+      });
+
+      if (!product) {
+        return null;
+      }
+
+      runInAction(() => {
+        this.customProducts.unshift(product);
+        this.persist();
+      });
+
+      return product;
+    }
+
     const product = await ProductApi.createProduct(payload);
     const sanitizedProduct = sanitizeProduct(product);
 
@@ -169,13 +203,15 @@ class ProductsStore {
   async removeProduct(productId: string) {
     this.ensureHydrated();
 
-    const isRemoteProduct = this.remoteProducts.some(
-      (product) => product.id === productId
-    );
-    const product = this.products.find((item) => item.id === productId);
+    if (!this.isLocal) {
+      const isRemoteProduct = this.remoteProducts.some(
+        (product) => product.id === productId
+      );
+      const product = this.products.find((item) => item.id === productId);
 
-    if (isRemoteProduct && product?.sourceKey === CUSTOM_SOURCE_KEY) {
-      await ProductApi.removeProduct(productId);
+      if (isRemoteProduct && product?.sourceKey === CUSTOM_SOURCE_KEY) {
+        await ProductApi.removeProduct(productId);
+      }
     }
 
     runInAction(() => {

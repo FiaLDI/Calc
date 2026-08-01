@@ -28,6 +28,7 @@ export const UserProfile = observer(() => {
   const authStore = useAuthStore();
   const profileModal = useModal();
   const user = authStore.user;
+  const localMode = authStore.isLocal;
 
   if (!user) {
     return null;
@@ -81,8 +82,14 @@ export const UserProfile = observer(() => {
                 {user.username}
               </h3>
               <p className="truncate text-sm text-zinc-500">{user.email}</p>
-              <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                Аккаунт активен
+              <span
+                className={
+                  localMode
+                    ? "mt-2 inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800"
+                    : "mt-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                }
+              >
+                {localMode ? "Локальный режим" : "Аккаунт активен"}
               </span>
             </div>
           </div>
@@ -101,24 +108,40 @@ export const UserProfile = observer(() => {
                 {user.email}
               </dd>
             </div>
-            <div className="h-px bg-zinc-200/70" />
-            <div className="flex items-start justify-between gap-4">
-              <dt className="text-sm text-zinc-500">Дата регистрации</dt>
-              <dd className="text-right text-sm font-medium text-zinc-900">
-                {formatCreatedAt(user.createdAt)}
-              </dd>
-            </div>
+            {!localMode ? (
+              <>
+                <div className="h-px bg-zinc-200/70" />
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-sm text-zinc-500">Дата регистрации</dt>
+                  <dd className="text-right text-sm font-medium text-zinc-900">
+                    {formatCreatedAt(user.createdAt)}
+                  </dd>
+                </div>
+              </>
+            ) : null}
           </dl>
 
-          <section className="mt-6 rounded-3xl border border-zinc-100 p-4">
-            <h3 className="font-semibold text-zinc-900">Мои данные</h3>
-            <p className="mb-4 mt-1 text-sm leading-5 text-zinc-500">
-              Сохраните дневник и личные продукты в XML или восстановите их из файла.
-            </p>
-            <div className="flex justify-start [&>div]:items-start">
-              <DataTransferActions />
-            </div>
-          </section>
+          {localMode ? (
+            <section className="mt-6 rounded-3xl border border-zinc-100 p-4">
+              <h3 className="font-semibold text-zinc-900">Данные</h3>
+              <p className="mt-1 text-sm leading-5 text-zinc-500">
+                В локальном режиме дневник и продукты хранятся только в этом
+                браузере (localStorage). Экспорт/импорт XML недоступен без
+                сервера.
+              </p>
+            </section>
+          ) : (
+            <section className="mt-6 rounded-3xl border border-zinc-100 p-4">
+              <h3 className="font-semibold text-zinc-900">Мои данные</h3>
+              <p className="mb-4 mt-1 text-sm leading-5 text-zinc-500">
+                Сохраните дневник и личные продукты в XML или восстановите их из
+                файла.
+              </p>
+              <div className="flex justify-start [&>div]:items-start">
+                <DataTransferActions />
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="flex flex-col-reverse gap-2 border-t border-zinc-100 p-5 sm:flex-row sm:justify-end sm:p-6">
@@ -135,7 +158,7 @@ export const UserProfile = observer(() => {
             onClick={() => void authStore.logout()}
             type="button"
           >
-            Выйти из аккаунта
+            {localMode ? "Выйти из локального режима" : "Выйти из аккаунта"}
           </button>
         </div>
       </Modal>

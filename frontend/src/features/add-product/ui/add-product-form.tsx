@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { useAuthStore } from "@/entities/auth";
 import {
   PRODUCT_CATEGORIES,
   PRODUCT_UNITS,
@@ -11,6 +10,19 @@ import {
   useProductsStore,
 } from "@/entities/products";
 import { uploadImageToCdn } from "@/shared/api/cdn";
+import { useState } from "react";
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(typeof reader.result === "string" ? reader.result : "");
+    };
+    reader.onerror = () => {
+      reject(reader.error ?? new Error("Failed to read image file."));
+    };
+    reader.readAsDataURL(file);
+  });
 
 type ProductFormState = {
   amountUnit: ProductUnit;
@@ -50,6 +62,7 @@ export const AddProductForm = ({
   onSuccess,
 }: AddProductFormProps) => {
   const productsStore = useProductsStore();
+  const authStore = useAuthStore();
   const [formState, setFormState] = useState<ProductFormState>(initialFormState);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,10 +83,16 @@ export const AddProductForm = ({
 
         void (async () => {
           try {
-            const uploadedImage = imageFile
-              ? await uploadImageToCdn(imageFile)
-              : null;
-            const imageUrl = uploadedImage?.url || formState.imageUrl;
+            let imageUrl = formState.imageUrl.trim();
+
+            if (imageFile) {
+              if (authStore.isLocal) {
+                imageUrl = (await readFileAsDataUrl(imageFile)) || imageUrl;
+              } else {
+                const uploadedImage = await uploadImageToCdn(imageFile);
+                imageUrl = uploadedImage?.url || imageUrl;
+              }
+            }
 
             await productsStore.addProduct({
               amountUnit: formState.amountUnit,
