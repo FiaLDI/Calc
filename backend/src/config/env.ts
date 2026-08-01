@@ -33,6 +33,16 @@ const getJwtToken = () => {
 const frontendOrigin =
   process.env.FRONTEND_ORIGIN || "http://localhost:3000";
 
+const normalizeTimeoutMs = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+};
+
 export const env = {
   cookieSecure:
     process.env.COOKIE_SECURE === undefined
@@ -45,6 +55,15 @@ export const env = {
     uri:
       process.env.MONGO_URI ||
       "mongodb://calc:calc-password@localhost:27017/calc?authSource=admin",
+  },
+  openFoodFacts: {
+    baseUrl: (
+      process.env.OPEN_FOOD_FACTS_BASE_URL || "https://world.openfoodfacts.org"
+    ).replace(/\/$/, ""),
+    timeoutMs: normalizeTimeoutMs(process.env.OPEN_FOOD_FACTS_TIMEOUT_MS, 8_000),
+    userAgent:
+      process.env.OPEN_FOOD_FACTS_USER_AGENT ||
+      "Calc/0.1.0 (https://github.com/FiaLDI/Calc)",
   },
   port: normalizePort(process.env.PORT),
 };

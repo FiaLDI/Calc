@@ -51,6 +51,24 @@ export type ProductSourceMeta = {
   label: string;
 };
 
+export type CatalogSearchQuery = {
+  limit: number;
+  locale?: string;
+  offset: number;
+  q: string;
+};
+
+export type CatalogSearchResult = {
+  items: ProductDto[];
+  total: number;
+};
+
+export interface ProductCatalogProvider {
+  readonly meta: ProductSourceMeta;
+  getByExternalId(externalId: string): Promise<ProductDto | null>;
+  search(query: CatalogSearchQuery): Promise<CatalogSearchResult>;
+}
+
 export interface ProductsRepositoryContract {
   createProduct(userId: string, payload: ProductCreatePayload): Promise<ProductDto>;
   deleteProduct(userId: string, productId: string): Promise<boolean>;

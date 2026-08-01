@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
         port: "4001",
         pathname: "/images/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.openfoodfacts.org",
+        pathname: "/images/**",
+      },
     ],
   },
   reactCompiler: true,

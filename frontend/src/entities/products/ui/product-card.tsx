@@ -3,18 +3,25 @@ import Image from "next/image";
 import type { Product } from "../model/types";
 
 type ProductCardProps = {
+  isImporting?: boolean;
   isSelected?: boolean;
+  onImport?: (productId: string) => void;
   onRemove?: (productId: string) => void;
   onSelect?: (productId: string) => void;
   product: Product;
 };
 
 export const ProductCard = ({
+  isImporting = false,
   isSelected = false,
+  onImport,
   onRemove,
   onSelect,
   product,
 }: ProductCardProps) => {
+  const canImport =
+    Boolean(onImport) && product.isReadonly && product.sourceKey !== "custom";
+
   const content = (
     <>
       {product.imageUrl ? (
@@ -24,6 +31,7 @@ export const ProductCard = ({
           width={80}
           height={80}
           className="h-16 w-16 shrink-0 rounded-2xl object-cover sm:h-20 sm:w-20"
+          unoptimized
         />
       ) : (
         <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-bold text-emerald-700 sm:h-20 sm:w-20">
@@ -33,7 +41,9 @@ export const ProductCard = ({
 
       <span className="min-w-0 flex-1">
         <span className="mb-1 flex flex-wrap items-center gap-2">
-          <span className="break-words font-semibold text-zinc-900">{product.name}</span>
+          <span className="break-words font-semibold text-zinc-900">
+            {product.name}
+          </span>
           {isSelected ? (
             <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-semibold text-white">
               Выбран
@@ -43,11 +53,16 @@ export const ProductCard = ({
             <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
               {product.visibility === "public" ? "Для всех" : "Личный"}
             </span>
-          ) : null}
+          ) : (
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800">
+              {product.sourceLabel}
+            </span>
+          )}
         </span>
 
         <span className="block break-words text-xs text-zinc-500">
-          {product.category} · {product.sourceLabel}
+          {product.category} · на {product.amountValue}
+          {product.amountUnit}
         </span>
         <span className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
           <span className="rounded-full bg-white px-2 py-1 font-medium text-zinc-700">
@@ -89,15 +104,27 @@ export const ProductCard = ({
         </div>
       )}
 
-      {!product.isReadonly && onRemove ? (
-        <button
-          type="button"
-          onClick={() => onRemove(product.id)}
-          className="mt-3 rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
-        >
-          Удалить
-        </button>
-      ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {canImport ? (
+          <button
+            type="button"
+            disabled={isImporting}
+            onClick={() => onImport?.(product.id)}
+            className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {isImporting ? "Добавляем…" : "В мои продукты"}
+          </button>
+        ) : null}
+        {!product.isReadonly && onRemove ? (
+          <button
+            type="button"
+            onClick={() => onRemove(product.id)}
+            className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-900 hover:text-white"
+          >
+            Удалить
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 };

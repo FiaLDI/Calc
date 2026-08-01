@@ -33,6 +33,9 @@ services:
       JWT_TOKEN: ${JWT_TOKEN:?JWT_TOKEN must be set in .env}
       MONGO_DB_NAME: ${MONGO_DATABASE:-calc}
       MONGO_URI: mongodb://${MONGO_ROOT_USERNAME:-calc}:${MONGO_ROOT_PASSWORD:-calc-password}@mongo:27017/${MONGO_DATABASE:-calc}?authSource=admin
+      OPEN_FOOD_FACTS_BASE_URL: ${OPEN_FOOD_FACTS_BASE_URL:-https://world.openfoodfacts.org}
+      OPEN_FOOD_FACTS_USER_AGENT: ${OPEN_FOOD_FACTS_USER_AGENT:-Calc/0.1.0 (https://github.com/FiaLDI/Calc)}
+      OPEN_FOOD_FACTS_TIMEOUT_MS: ${OPEN_FOOD_FACTS_TIMEOUT_MS:-8000}
     depends_on:
       mongo:
         condition: service_healthy

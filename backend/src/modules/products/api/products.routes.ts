@@ -8,6 +8,10 @@ export const createProductsRouter = (productsController: ProductsController) => 
 
   router.get("/products", asyncHandler(productsController.getProducts));
   router.post("/products", asyncHandler(productsController.createProduct));
+  router.post(
+    "/products/import",
+    asyncHandler(productsController.importProduct)
+  );
   router.get<{ id: string }>(
     "/products/:id",
     asyncHandler(productsController.getProductById)

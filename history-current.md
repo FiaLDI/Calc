@@ -57,7 +57,8 @@ cd backend  && npm test && npm run typecheck
 4. **Внедрили тесты + CI** — см. §4–5.
 5. **Удалили сид-каталог** — см. §3.
 6. **Локальный режим как фича для всех** — `features/continue-locally`, без env-флага; см. §9.
-7. **Зафиксировали** состояние в этом файле.
+7. **Слой каталогов + Open Food Facts** — см. §10.
+8. **Зафиксировали** состояние в этом файле.
 
 ---
 
@@ -168,3 +169,20 @@ cd backend  && npm test && npm run typecheck
 | XML | data-transfer скрыт в профиле |
 
 Хелпер: `shared/config/local-mode.ts` (`isLocalMode` / `enableLocalMode` / `disableLocalMode`).
+
+---
+
+## 10. Каталоги продуктов (Open Food Facts)
+
+Порт `ProductCatalogProvider` + `CatalogRegistry`. Mongo = custom. OFF = live search/import.
+
+| API | Поведение |
+|---|---|
+| `GET /products?search=&sources=` | merge custom + каталоги при search ≥ запрос |
+| `GET /products/:id` | `off:{barcode}` через OFF, иначе Mongo |
+| `POST /products/import` | `{ sourceKey, externalId }` → custom private |
+| `GET /product-sources` | custom + off (и др. из registry) |
+
+FE: поиск (debounce) в product-library / find-product; кнопка «В мои продукты» на readonly карточках.
+
+Тесты BE: mapper OFF + merge/import service (всего backend **10**).

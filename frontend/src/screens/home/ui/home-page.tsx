@@ -6,6 +6,7 @@ import { CalorieSummaryWidget } from "@/widgets/calorie-summary";
 import { DayCalendarWidget } from "@/widgets/day-calendar";
 import { DiaryAdder } from "@/widgets/diary-adder";
 import { DiaryEntriesWidget } from "@/widgets/diary-entries";
+import { ProductLibraryWidget } from "@/widgets/product-library";
 import { WeeklyKbjuWidget } from "@/widgets/weekly-kbju";
 import { Header } from "@/widgets/header";
 
@@ -19,6 +20,7 @@ export const HomePage = observer(() => {
           <CalorieSummaryWidget />
           <DayCalendarWidget />
           <DiaryAdder />
+          <ProductLibraryWidget />
         </div>
 
         <div className="grid w-full min-w-0 max-w-full gap-4 overflow-hidden xl:h-full xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">

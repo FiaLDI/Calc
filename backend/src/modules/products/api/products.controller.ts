@@ -15,7 +15,7 @@ import type {
   ProductsListResponse,
   ProductSourcesResponse,
 } from "../domain/products.types.js";
-import { parseProductCreatePayload } from "./products.validation.js";
+import { parseProductCreatePayload, parseProductImportPayload } from "./products.validation.js";
 
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
@@ -73,6 +73,19 @@ export class ProductsController {
     const product = await this.productsService.createProduct(
       getRequestUserId(request),
       parseProductCreatePayload(request.body)
+    );
+
+    response.status(201).json({
+      data: product,
+    });
+  };
+
+  importProduct = async (request: Request, response: Response<ProductResponse>) => {
+    const payload = parseProductImportPayload(request.body);
+    const product = await this.productsService.importFromCatalog(
+      getRequestUserId(request),
+      payload.sourceKey,
+      payload.externalId
     );
 
     response.status(201).json({
