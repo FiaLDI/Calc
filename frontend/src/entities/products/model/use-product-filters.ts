@@ -42,7 +42,7 @@ export const useProductFilters = (
     return Array.from(
       new Map(products.map((product) => [product.sourceKey, product.sourceLabel]))
     );
-  }, [options?.sources, products]);
+  }, [options, products]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { observer } from "mobx-react-lite";
 
 import { useAuthStore } from "@/entities/auth";
@@ -10,7 +11,7 @@ export const Header = observer(() => {
 
   return (
     <header className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white px-4 py-3 shadow-sm">
-      <div className="flex min-w-0 items-center gap-3">
+      <Link href="/" className="flex min-w-0 items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 font-black text-white">
           C
         </div>
@@ -31,7 +32,7 @@ export const Header = observer(() => {
               : authStore.user?.email}
           </p>
         </div>
-      </div>
+      </Link>
       <div className="ml-auto flex flex-wrap items-start justify-end gap-2">
         <UserProfile />
         <button
