@@ -24,6 +24,24 @@ export const DiaryEntriesProvider = ({
 
   useEffect(() => {
     store.hydrate();
+
+    const refreshFromServer = () => {
+      void store.loadEntries();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshFromServer();
+      }
+    };
+
+    window.addEventListener("focus", refreshFromServer);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", refreshFromServer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [store]);
 
   return (
